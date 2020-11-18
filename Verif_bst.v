@@ -22,6 +22,15 @@ Arguments bin_tree _%type_scope.
 Arguments leaf {A}%type_scope.
 Arguments node {A}%type_scope.
 
+Inductive bin_tree_hole (A: Type) : Type :=
+  | hole  : bin_tree_hole A 
+  | hLeaf : bin_tree_hole A
+  | hNode : A -> bin_tree_hole A -> bin_tree_hole A -> bin_tree_hole A.
+Arguments bin_tree_hole _%type_scope.
+Arguments hole  {A}%type_scope.
+Arguments hLeaf {A}%type_scope.
+Arguments hNode {A}%type_scope.
+
 Inductive bin_tree_forall {A} : bin_tree A -> (A -> Prop) -> Prop :=
   | bin_tree_forall_leaf : forall p, bin_tree_forall leaf p 
   | bin_tree_forall_node : forall (p: A -> Prop) a l r,
@@ -37,8 +46,7 @@ Inductive well_ordered {A} : bin_tree (Z * A) -> Prop :=
       well_ordered (node (k, v) l r).
 
 Definition bst A := bin_tree (Z * A).
-(* Definition bst A := sig well_ordered. *)
-Definition bst_wo A := {b : bst A | well_ordered b}.
+Definition bst_hole A := bin_tree_hole (Z * A).
 
 Inductive is_subtree {A} : bin_tree A -> bin_tree A -> Prop :=
   | is_subtree_refl  : forall b, is_subtree b b 
@@ -107,13 +115,6 @@ Proof.
     constructor; try (apply insert_forall + apply IHb1 + apply IHb2); assumption.
 Qed.
 
-Definition insert_wo {A} (k: Z) (v: A) (b: bst_wo A) : bst_wo A.
-  refine (match b with 
-  | exist bt _ => exist _ (insert k v bt) _
-  end).
-  apply insert_well_ordered; assumption.
-Defined.
-
 Fixpoint search {A} (k: Z) (b: bst A) : bst A := 
   match b with 
   | leaf => leaf
@@ -179,31 +180,19 @@ Fixpoint bst_rep (b: bst Z) (p: val): mpred :=
         bst_rep r pr
   end.
 
-(* For now, this is given axiomatically *)
-Definition val_eq (x y : val) : bool. Admitted.
-Theorem reflect_val_eq : forall x y, reflect (x = y) (val_eq x y). Admitted.
-Theorem val_eq_reflexive : forall x, val_eq x x = true. Admitted.
-
-Fixpoint bst_rep_w_filter (small: bst Z) (psmall: val) (big: bst Z) (pbig: val) :=
-  if val_eq psmall pbig then 
-    !! (psmall = pbig /\ small = big) && emp
-  else match big with 
-  | leaf => (!! (pbig = nullval)) && emp 
-  | node (k, v) l r =>
+(* Check isptr. *)
+Function bst_hole_rep (b: bst_hole Z) (p: val): mpred :=
+  match b with 
+  (* | hole => !! (is_pointer_or_null p) && emp *)
+  | hole => emp
+  | hLeaf => (!! (p = nullval)) && emp 
+  | hNode (k, v) l r =>
       EX pl pr: val, 
-        malloc_token Ews t_bst pbig *
-        data_at Ews t_bst (Vint (Int.repr k), (Vint (Int.repr v), (pl, pr))) pbig *
-        bst_rep l pl *
-        bst_rep r pr
+        malloc_token Ews t_bst p *
+        data_at Ews t_bst (Vint (Int.repr k), (Vint (Int.repr v), (pl, pr))) p *
+        bst_hole_rep l pl *
+        bst_hole_rep r pr
   end.
-
-Definition bst_rep_and_context (small: bst Z) (psmall: val) (big: bst Z) (pbig: val) :=
-  sepcon (bst_rep small psmall) (bst_rep_w_filter small psmall big pbig).
-
-(* Suggested by VC. Idea is that the representation of bst shouldn't typically be dealt with explicitly *)
-Arguments bst_rep b p : simpl never.
-Arguments bst_rep_w_filter small psmall big pbig : simpl never.
-Arguments bst_rep_and_context small psmall big pbig : simpl never.
 
 Lemma bst_rep_local_prop: forall b p,
   bst_rep b p |-- !! (is_pointer_or_null p /\ (p = nullval <-> b = leaf)).
@@ -227,6 +216,32 @@ Proof.
   intros b p. induction b; unfold bst_rep; try destruct a; entailer. 
 Qed.
 Hint Resolve bst_rep_valid_pointer : valid_pointer. 
+
+(* Lemma bst_hole_rep_local_prop: forall b p,
+  bst_hole_rep b p |-- !! (is_pointer_or_null p).
+  (* bst_hole_rep b p |-- !! (is_pointer_or_null p /\ (p = nullval <-> (b = hole \/ b = hLeaf)). *)
+Proof.
+  intros b p. induction b; try solve [unfold bst_hole_rep; entailer!].
+  destruct a.
+  expand bst_hole_rep.
+  entailer.
+  entailer!.
+Qed.
+Hint Resolve bst_hole_rep_local_prop : saturate_local.
+ *)
+(* Lemma bst_hole_rep_valid_pointer: forall b p,
+  bst_hole_rep b p |-- valid_pointer p.
+Proof. 
+  intros b p. induction b; expand bst_hole_rep.
+  - entailer!. 
+    destruct p; try entailer!; unfold is_pointer_or_null in PNp.
+    + destruct Archi.ptr64; entailer!.
+    + admit.
+  - entailer!.
+  - destruct a. entailer.
+Admitted.
+Hint Resolve bst_hole_rep_valid_pointer : valid_pointer. 
+ *)
 
 (* Function specifications *) 
 
@@ -260,6 +275,7 @@ Definition insert_bst_spec: ident * funspec :=
            bst_rep (insert k v b) new_bst;
            mem_mgr gv).
 
+(* This specification could be stronger. It does not prove that the bst is unchanged. *)
 Definition search_bst_spec: ident * funspec := 
   DECLARE _search_bst 
   WITH head: val, k: Z, b: bst Z, gv: globals 
@@ -268,10 +284,11 @@ Definition search_bst_spec: ident * funspec :=
     PARAMS (head; Vint (Int.repr k)) GLOBALS (gv)
     SEP (bst_rep b head; mem_mgr gv)
   POST [tptr t_bst] 
-    EX vret, 
+    EX vret, EX b2,
       PROP () 
       RETURN (vret) 
-      SEP (bst_rep_and_context (search k b) vret b head; mem_mgr gv).
+      SEP (b2; bst_rep (search k b) vret; mem_mgr gv).
+      (* SEP (bst_hole_rep () head; bst_rep (search k b) vret; mem_mgr gv). *)
 
 Definition Gprog: funspecs := 
   ltac:(with_library prog [new_bst_spec; insert_bst_spec; search_bst_spec]).
@@ -373,87 +390,74 @@ Theorem body_search_bst: semax_body Vprog Gprog f_search_bst search_bst_spec.
 Proof.
   start_function.
   forward_loop (
-    EX curr: val, EX curr_b: bst Z,
+    EX curr: val, EX curr_b: bst Z, EX b_hole,
       PROP (search_path k b curr_b)
       LOCAL (
         gvars gv; temp _bst__1 curr;
         temp _key (Vint (Int.repr k)))
-      SEP (bst_rep_and_context curr_b curr b head; mem_mgr gv)
+      SEP (b_hole; bst_rep curr_b curr; mem_mgr gv)
   ).
   { repeat EExists.
     entailer!.
     - constructor.
-    - destruct b; simplify_assumps; subst;
-      expand bst_rep_and_context; expand bst_rep_w_filter; expand bst_rep.
-      + rewrite val_eq_reflexive. entailer!.
-      + repeat destruct_pair. 
-        Intros pl pr.
-        repeat EExists.
-        rewrite val_eq_reflexive.
-        entailer!. }
-  Intros curr curr_b.
+    - repeat entailer!. }
+  Intros curr curr_b b_hole.
   forward_if.
-  { destruct curr_b; expand bst_rep_and_context; entailer!. }
   { forward.
-    EExists.
-    entailer!.
-    expand bst_rep_and_context.
+    repeat EExists.
     entailer!.
     simplify_assumps; subst.
     rewrite search_path_fail by assumption.
-    entailer!. }
-  assert_PROP (curr_b <> leaf) by (expand bst_rep_and_context; entailer!; find_contradiction).
+    expand bst_rep.
+    repeat entailer!. }
+  assert_PROP (curr_b <> leaf) by (expand bst_rep; entailer!; find_contradiction). 
   destruct curr_b; [contradiction|].
-  expand bst_rep_and_context.
   expand bst_rep.
   destruct_pair.
   Intros pl pr.
   forward.
   forward_if.
   { forward.
-    EExists.
-    entailer!.
     erewrite search_path_constant by eassumption.
+    simpl.
     assert (k = z).
     { apply repr_inj_signed; try assumption.
       apply search_path_is_subtree in H1.
       pose proof (subtree_forall _ _ _ H1 H0) as H10.
       inversion H10; simpl in *; assumption. }
-    subst. simpl.
+    subst.
     rewrite Z.compare_refl.
-    expand bst_rep_and_context.
-    entailer!.
     expand bst_rep.
+    EExists.
+    Exists b_hole.
+    entailer!.
     repeat EExists.
     entailer!. }
   forward.
   forward_if.
   - forward.
-    Exists pl curr_b1.
+    Exists pl curr_b1
+      ((b_hole * malloc_token Ews t_bst curr * 
+        data_at Ews t_bst (Vint (Int.repr z), (Vint (Int.repr z0), (pl, pr))) curr *
+        bst_rep curr_b2 pr)%logic).
     entailer!.
-    + eapply path_step_down_l; [eassumption|].
-      rewrite Int.signed_repr in H5. assumption.
-      apply search_path_is_subtree in H1.
-      pose proof (subtree_forall _ _ _ H1 H0) as H11.
-      inversion H11; simpl in *; assumption.
-    + expand bst_rep_and_context.
-      entailer!.
-      (* This looks tough, but correct. *)
-      expand bst_rep_w_filter.
-      (* Note that curr_b is a subtree of b. When they are equal, so are curr/head *)
-      (* destruct (reflect_val_eq curr head).
-      * entailer!. *)
-      admit.
+    eapply path_step_down_l; [eassumption|].
+    rewrite Int.signed_repr in H5. assumption.
+    apply search_path_is_subtree in H1.
+    pose proof (subtree_forall _ _ _ H1 H0) as H11.
+    inversion H11; simpl in *; assumption.
   - forward.
-    Exists pr curr_b2.
+    Exists pr curr_b2
+      ((b_hole * malloc_token Ews t_bst curr * 
+        data_at Ews t_bst (Vint (Int.repr z), (Vint (Int.repr z0), (pl, pr))) curr *
+        bst_rep curr_b1 pl)%logic).
     entailer!.
-    + eapply path_step_down_r; [eassumption|].
-      apply search_path_is_subtree in H1.
-      pose proof (subtree_forall _ _ _ H1 H0) as H11.
-      rewrite Int.signed_repr in H5.
-      * enough (k <> z). lia.
-        apply repr_inj_signed'; try assumption.
-        inversion H11; simpl in *; assumption.
-      * inversion H11; simpl in *; assumption.
-    + admit.
-Admitted.
+    eapply path_step_down_r; [eassumption|].
+    apply search_path_is_subtree in H1.
+    pose proof (subtree_forall _ _ _ H1 H0) as H11.
+    rewrite Int.signed_repr in H5.
+    + enough (k <> z). lia.
+      apply repr_inj_signed'; try assumption.
+      inversion H11; simpl in *; assumption.
+    + inversion H11; simpl in *; assumption.
+Qed.
