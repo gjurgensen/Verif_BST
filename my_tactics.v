@@ -10,8 +10,9 @@ Proof.
   intros; apply Zcompare_elim; auto.
 Qed.
 
+(* TODO: replace `subst` with something that just rewrites with new `x=y` hypothesis. *)
 Ltac reflect_destruct_Z_compare x y :=
-  pose proof (reflect_Z_compare x y); destruct (x ?= y) eqn:?.
+  pose proof (reflect_Z_compare x y); destruct (x ?= y) eqn:?; [subst | | ].
 
 Ltac find_Z_compare_destruct :=
   match goal with 
@@ -109,7 +110,7 @@ Ltac simplify_assumps :=
 
 Ltac find_solve_inversion := 
   match goal with 
-  | [H : _ |- _] => solve [inversion H]
+  | [H : _ |- _] => solve [inversion H; my_crush]
   end.
 
 Ltac find_contradiction :=
