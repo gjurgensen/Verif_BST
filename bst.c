@@ -1,7 +1,7 @@
 #include <stddef.h>
 
 extern void * malloc(size_t n);
-extern void * free(size_t n);
+extern void free(void * ptr);
 
 struct bst {
   int key;
@@ -50,8 +50,8 @@ void insert_bst(struct bst ** bst, int key, int val) {
   }
 }
 
-// Assumes a non-empty bst
-struct bst pop_min(struct bst ** bst_ptr);
+// Returns a dangling bst node which needs to be freed after use
+struct bst * pop_min(struct bst ** bst_ptr);
 
 void delete_bst(struct bst ** parent_ptr, int key) {
   struct bst * parent = *parent_ptr;
@@ -60,9 +60,10 @@ void delete_bst(struct bst ** parent_ptr, int key) {
   else if (key == parent->key) {
     if (parent->left) {
       if (parent->right) {
-        struct bst min = pop_min(&(parent->right));
-        parent->key = min.key;
-        parent->val = min.val;
+        struct bst * min = pop_min(&(parent->right));
+        parent->key = min->key;
+        parent->val = min->val;
+        free(min);
       }
       else {
         *parent_ptr = parent->left;
@@ -90,9 +91,10 @@ void delete_bst(struct bst ** parent_ptr, int key) {
         else if (key == parent->left->key) {
           if (parent->left->left) {
             if (parent->left->right) {
-              struct bst min = pop_min(&(parent->left->right));
-              parent->left->key = min.key;
-              parent->left->val = min.val;
+              struct bst * min = pop_min(&(parent->left->right));
+              parent->left->key = min->key;
+              parent->left->val = min->val;
+              free(min);
               return;
             }
             else {
@@ -127,9 +129,10 @@ void delete_bst(struct bst ** parent_ptr, int key) {
         if (key == parent->right->key) {
           if (parent->right->left) {
             if (parent->right->right) {
-              struct bst min = pop_min(&(parent->right->right));
-              parent->right->key = min.key;
-              parent->right->val = min.val;
+              struct bst * min = pop_min(&(parent->right->right));
+              parent->right->key = min->key;
+              parent->right->val = min->val;
+              free(min);
               return;
             }
             else {
