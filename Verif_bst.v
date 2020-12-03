@@ -130,6 +130,164 @@ Proof.
     constructor; try (apply insert_forall + apply IHb1 + apply IHb2); assumption.
 Qed.
 
+Fixpoint pop_min {A} (a: Z * A) (l r: bst A) : (Z * A) * bst A :=
+  match l with
+  | leaf => (a, r)
+  | node a' l' r' =>
+      let (min_a, popped_l) := pop_min a' l' r'
+      in (min_a, node a popped_l r)
+  end.
+
+Lemma pop_min_forall_1 {A} : forall (p: (Z * A) -> Prop) a l r,
+  bin_tree_forall (node a l r) p -> p (fst (pop_min a l r)).
+Proof.
+  intros p a l; revert p a.
+  induction l; intros; simpl.
+  - inversion H; assumption.
+  - destruct (pop_min a l1 l2) eqn:H_pop.
+    simpl.
+    replace p0 with (fst (pop_min a l1 l2)) by (rewrite H_pop; reflexivity).
+    apply IHl1.
+    inversion H; assumption.
+Qed.
+
+Lemma pop_min_forall_2 {A} : forall (p: (Z * A) -> Prop) a l r,
+  bin_tree_forall (node a l r) p -> bin_tree_forall (snd (pop_min a l r)) p.
+Proof.
+  intros p a l; revert p a.
+  induction l; intros; simpl.
+  - inversion H; assumption.
+  - destruct (pop_min a l1 l2) eqn:H_pop.
+    simpl.
+    replace b with (snd (pop_min a l1 l2)) by (rewrite H_pop; reflexivity).
+    constructor.
+    + inversion H; assumption.
+    + apply IHl1. inversion H; assumption.
+    + inversion H; assumption.
+Qed.
+
+Theorem bin_tree_forall_strengthen {A} : forall (p q: (Z * A) -> Prop) b,
+  (forall x, p x -> q x) -> bin_tree_forall b p -> bin_tree_forall b q.
+Proof.
+  intros.
+  dependent induction H0; subst; constructor; simplify_assumps.
+  - apply H. assumption.
+  - assumption.
+  - assumption.
+Qed.
+
+Lemma pop_min_is_min {A} : forall (a: Z * A) l r,
+  well_ordered (node a l r) ->
+  bin_tree_forall (snd (pop_min a l r)) (fun n => fst n > fst (fst (pop_min a l r))).
+Proof.
+  intros a l; revert a.
+  induction l; intros; simpl.
+  - inversion H; assumption.
+  - destruct (pop_min a l1 l2) eqn:H_pop.
+    replace p with (fst (pop_min a l1 l2)) by (rewrite H_pop; reflexivity).
+    replace b with (snd (pop_min a l1 l2)) by (rewrite H_pop; reflexivity).
+    simpl.
+    constructor.
+    + inversion H; subst.
+      simpl.
+      apply pop_min_forall_1 in H3.
+      lia.
+    + apply IHl1. inversion H; assumption.
+    + inversion H; subst.
+      eapply bin_tree_forall_strengthen; [|eassumption].
+      intros [x].
+      simpl.
+      enough (k > fst (fst (pop_min a l1 l2))); [lia|].
+      apply pop_min_forall_1 in H3.
+      lia.
+Qed.
+
+Theorem pop_min_well_ordered {A} : forall (a: Z * A) l r,
+  well_ordered (node a l r) -> well_ordered (snd (pop_min a l r)).
+Proof.
+  intros a l; revert a.
+  induction l; intros; simpl.
+  - inversion H; assumption.
+  - destruct (pop_min a l1 l2) eqn:H_pop.
+    simpl.
+    replace b with (snd (pop_min a l1 l2)) by (rewrite H_pop; reflexivity).
+    destruct a0; constructor.
+    + apply pop_min_forall_2. inversion H; assumption.
+    + inversion H; assumption.
+    + apply IHl1. inversion H; assumption.
+    + inversion H; assumption.
+Qed.
+
+Fixpoint delete {A} (k: Z) (b: bst A) : bst A := 
+  match b with 
+  | leaf => leaf
+  | node (k', v) l r => 
+      match k ?= k' with 
+      | Eq => match l with
+          | leaf => r
+          | _ => match r with 
+              | leaf => leaf
+              | node ra rl rr =>
+                  let (min_a, popped_r) := pop_min ra rl rr
+                  in node min_a l popped_r
+              end
+          end
+      | Lt => delete k l
+      | Gt => delete k r
+      end 
+  end.
+
+Lemma delete_forall {A} : forall (p: (Z * A) -> Prop) k bst,
+  bin_tree_forall bst p -> bin_tree_forall (delete k bst) p.
+Proof.
+  intros p k b.
+  induction b as [|[k' v] l IH1 r IH2]; intro H; simpl; [assumption|].
+  find_Z_compare_destruct.
+  - destruct l, r; try (inversion H; assumption).
+    destruct (pop_min p1 r1 r2) eqn:H_pop.
+    constructor.
+    + replace p2 with (fst (pop_min p1 r1 r2)) by (rewrite H_pop; reflexivity).
+      apply pop_min_forall_1.
+      inversion H; assumption.
+    + inversion H; assumption.
+    + replace b with (snd (pop_min p1 r1 r2)) by (rewrite H_pop; reflexivity).
+      apply pop_min_forall_2.
+      inversion H; assumption.
+  - apply IH1. inversion H; assumption.
+  - apply IH2. inversion H; assumption.
+Qed.
+
+
+Theorem delete_well_ordered {A}: forall (b: bst A) k, 
+  well_ordered b -> well_ordered (delete k b).
+Proof.
+  intros b; induction b as [|[k' v] l IH1 r IH2]; intros k H; simpl; [constructor|].
+  find_Z_compare_destruct.
+  - destruct l, r; try (inversion H; assumption).
+    destruct (pop_min p0 r1 r2) eqn:H_pop.
+    destruct_pair.
+    constructor.
+    + inversion H; subst.
+      eapply bin_tree_forall_strengthen; [|eassumption].
+      intros [x].
+      simpl.
+      enough (k' < z); [lia|].
+      apply pop_min_forall_1 in H5.
+      rewrite H_pop in H5.
+      simpl in H5.
+      lia.
+    + replace b with (snd (pop_min p0 r1 r2)) by (rewrite H_pop; reflexivity).
+      replace z with (fst (fst (pop_min p0 r1 r2))) by (rewrite H_pop; reflexivity).
+      apply pop_min_is_min.
+      inversion H; assumption.
+    + inversion H; assumption.
+    + replace b with (snd (pop_min p0 r1 r2)) by (rewrite H_pop; reflexivity).
+      apply pop_min_well_ordered.
+      inversion H; assumption.
+  - apply IH1. inversion H; assumption.
+  - apply IH2. inversion H; assumption.
+Qed.
+
 Fixpoint search {A} (k: Z) (b: bst A) : bst A := 
   match b with 
   | leaf => leaf
@@ -396,7 +554,7 @@ Definition insert_bst_spec: ident * funspec :=
            bst_rep (insert k v b) new_bst;
            mem_mgr gv).
 
- Definition search_bst_spec: ident * funspec := 
+Definition search_bst_spec: ident * funspec := 
   DECLARE _search_bst 
   WITH head: val, k: Z, b: bst Z, gv: globals 
   PRE [tptr t_bst, tint]
@@ -407,11 +565,29 @@ Definition insert_bst_spec: ident * funspec :=
     SEP (bst_rep b head; mem_mgr gv)
   POST [tptr t_bst] 
     EX vret,
-      (* PROP (fill_hole (search k b) outer_b = b) *)
       PROP ()
       RETURN (vret)
       SEP (bst_hole_rep (search_make_hole k b) head; bst_rep (search k b) vret; mem_mgr gv).
- 
+
+Definition delete_bst_spec: ident * funspec :=
+  DECLARE _delete_bst
+  WITH parent_ptr: val, parent: val, k: Z, b: bst Z, gv: globals
+  PRE [tptr (tptr t_bst), tint]
+    PROP (repable_signed k; repable_signed v;
+          bin_tree_forall b (fun n => repable_signed (fst n));
+          well_ordered b)
+    PARAMS (parent_ptr; Vint (Int.repr k)) GLOBALS (gv)
+    SEP (data_at Ews (tptr t_bst) parent parent_ptr;
+         bst_rep b parent;
+         mem_mgr gv)
+  POST [tvoid]
+    EX new_bst: val,
+      PROP ()
+      RETURN ()
+      SEP (data_at Ews (tptr t_bst) new_bst parent_ptr; 
+           bst_rep (delete k b) new_bst;
+           mem_mgr gv).
+
 Definition Gprog: funspecs := 
   ltac:(with_library prog [new_bst_spec; insert_bst_spec; search_bst_spec]).
 
