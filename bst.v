@@ -69,77 +69,79 @@ Definition ___compcert_va_int32 : ident := 22%positive.
 Definition ___compcert_va_int64 : ident := 23%positive.
 Definition _bst : ident := 3%positive.
 Definition _bst__1 : ident := 60%positive.
-Definition _del : ident := 69%positive.
-Definition _del__1 : ident := 70%positive.
-Definition _del__2 : ident := 72%positive.
-Definition _del__3 : ident := 73%positive.
-Definition _delete_bst : ident := 74%positive.
+Definition _bst_ptr : ident := 64%positive.
+Definition _del : ident := 71%positive.
+Definition _del__1 : ident := 72%positive.
+Definition _del__2 : ident := 74%positive.
+Definition _del__3 : ident := 75%positive.
+Definition _delete_bst : ident := 76%positive.
 Definition _free : ident := 59%positive.
 Definition _insert_bst : ident := 63%positive.
 Definition _key : ident := 1%positive.
 Definition _left : ident := 4%positive.
-Definition _main : ident := 75%positive.
+Definition _main : ident := 77%positive.
 Definition _malloc : ident := 58%positive.
-Definition _min : ident := 67%positive.
-Definition _min__1 : ident := 68%positive.
-Definition _min__2 : ident := 71%positive.
+Definition _min : ident := 69%positive.
+Definition _min__1 : ident := 70%positive.
+Definition _min__2 : ident := 73%positive.
 Definition _new_bst : ident := 61%positive.
-Definition _parent : ident := 66%positive.
-Definition _parent_ptr : ident := 65%positive.
-Definition _pop_min : ident := 64%positive.
+Definition _parent : ident := 68%positive.
+Definition _parent_ptr : ident := 67%positive.
+Definition _pop_min : ident := 66%positive.
+Definition _ret : ident := 65%positive.
 Definition _right : ident := 5%positive.
 Definition _search_bst : ident := 62%positive.
 Definition _val : ident := 2%positive.
-Definition _t'1 : ident := 76%positive.
-Definition _t'10 : ident := 85%positive.
-Definition _t'11 : ident := 86%positive.
-Definition _t'12 : ident := 87%positive.
-Definition _t'13 : ident := 88%positive.
-Definition _t'14 : ident := 89%positive.
-Definition _t'15 : ident := 90%positive.
-Definition _t'16 : ident := 91%positive.
-Definition _t'17 : ident := 92%positive.
-Definition _t'18 : ident := 93%positive.
-Definition _t'19 : ident := 94%positive.
-Definition _t'2 : ident := 77%positive.
-Definition _t'20 : ident := 95%positive.
-Definition _t'21 : ident := 96%positive.
-Definition _t'22 : ident := 97%positive.
-Definition _t'23 : ident := 98%positive.
-Definition _t'24 : ident := 99%positive.
-Definition _t'25 : ident := 100%positive.
-Definition _t'26 : ident := 101%positive.
-Definition _t'27 : ident := 102%positive.
-Definition _t'28 : ident := 103%positive.
-Definition _t'29 : ident := 104%positive.
-Definition _t'3 : ident := 78%positive.
-Definition _t'30 : ident := 105%positive.
-Definition _t'31 : ident := 106%positive.
-Definition _t'32 : ident := 107%positive.
-Definition _t'33 : ident := 108%positive.
-Definition _t'34 : ident := 109%positive.
-Definition _t'35 : ident := 110%positive.
-Definition _t'36 : ident := 111%positive.
-Definition _t'37 : ident := 112%positive.
-Definition _t'38 : ident := 113%positive.
-Definition _t'39 : ident := 114%positive.
-Definition _t'4 : ident := 79%positive.
-Definition _t'40 : ident := 115%positive.
-Definition _t'41 : ident := 116%positive.
-Definition _t'42 : ident := 117%positive.
-Definition _t'43 : ident := 118%positive.
-Definition _t'44 : ident := 119%positive.
-Definition _t'45 : ident := 120%positive.
-Definition _t'46 : ident := 121%positive.
-Definition _t'47 : ident := 122%positive.
-Definition _t'48 : ident := 123%positive.
-Definition _t'49 : ident := 124%positive.
-Definition _t'5 : ident := 80%positive.
-Definition _t'50 : ident := 125%positive.
-Definition _t'6 : ident := 81%positive.
-Definition _t'7 : ident := 82%positive.
-Definition _t'8 : ident := 83%positive.
-Definition _t'9 : ident := 84%positive.
+Definition _t'1 : ident := 78%positive.
+Definition _t'10 : ident := 87%positive.
+Definition _t'11 : ident := 88%positive.
+Definition _t'12 : ident := 89%positive.
+Definition _t'13 : ident := 90%positive.
+Definition _t'14 : ident := 91%positive.
+Definition _t'15 : ident := 92%positive.
+Definition _t'16 : ident := 93%positive.
+Definition _t'17 : ident := 94%positive.
+Definition _t'18 : ident := 95%positive.
+Definition _t'19 : ident := 96%positive.
+Definition _t'2 : ident := 79%positive.
+Definition _t'20 : ident := 97%positive.
+Definition _t'21 : ident := 98%positive.
+Definition _t'22 : ident := 99%positive.
+Definition _t'23 : ident := 100%positive.
+Definition _t'24 : ident := 101%positive.
+Definition _t'25 : ident := 102%positive.
+Definition _t'26 : ident := 103%positive.
+Definition _t'27 : ident := 104%positive.
+Definition _t'28 : ident := 105%positive.
+Definition _t'29 : ident := 106%positive.
+Definition _t'3 : ident := 80%positive.
+Definition _t'30 : ident := 107%positive.
+Definition _t'31 : ident := 108%positive.
+Definition _t'32 : ident := 109%positive.
+Definition _t'33 : ident := 110%positive.
+Definition _t'34 : ident := 111%positive.
+Definition _t'35 : ident := 112%positive.
+Definition _t'36 : ident := 113%positive.
+Definition _t'37 : ident := 114%positive.
+Definition _t'38 : ident := 115%positive.
+Definition _t'39 : ident := 116%positive.
+Definition _t'4 : ident := 81%positive.
+Definition _t'40 : ident := 117%positive.
+Definition _t'41 : ident := 118%positive.
+Definition _t'42 : ident := 119%positive.
+Definition _t'43 : ident := 120%positive.
+Definition _t'44 : ident := 121%positive.
+Definition _t'45 : ident := 122%positive.
+Definition _t'46 : ident := 123%positive.
+Definition _t'47 : ident := 124%positive.
+Definition _t'48 : ident := 125%positive.
+Definition _t'49 : ident := 126%positive.
+Definition _t'5 : ident := 82%positive.
+Definition _t'50 : ident := 127%positive.
+Definition _t'6 : ident := 83%positive.
+Definition _t'7 : ident := 84%positive.
+Definition _t'8 : ident := 85%positive.
+Definition _t'9 : ident := 86%positive.
 
 Definition f_new_bst := {|
   fn_return := (tptr (Tstruct _bst noattr));
@@ -171,13 +173,15 @@ Definition f_new_bst := {|
           (Efield
             (Ederef (Etempvar _bst__1 (tptr (Tstruct _bst noattr)))
               (Tstruct _bst noattr)) _left (tptr (Tstruct _bst noattr)))
-          (Ecast (Econst_int (Int.repr 0) tint) (tptr tvoid)))
+          (Ecast (Ecast (Econst_int (Int.repr 0) tint) (tptr tvoid))
+            (tptr (Tstruct _bst noattr))))
         (Ssequence
           (Sassign
             (Efield
               (Ederef (Etempvar _bst__1 (tptr (Tstruct _bst noattr)))
                 (Tstruct _bst noattr)) _right (tptr (Tstruct _bst noattr)))
-            (Ecast (Econst_int (Int.repr 0) tint) (tptr tvoid)))
+            (Ecast (Ecast (Econst_int (Int.repr 0) tint) (tptr tvoid))
+              (tptr (Tstruct _bst noattr))))
           (Sreturn (Some (Etempvar _bst__1 (tptr (Tstruct _bst noattr))))))))))
 |}.
 
@@ -318,6 +322,67 @@ Definition f_insert_bst := {|
                               (Tstruct _bst noattr)) _right
                             (tptr (Tstruct _bst noattr)))
                           (tptr (tptr (Tstruct _bst noattr)))))))))))))))
+  Sskip)
+|}.
+
+Definition f_pop_min := {|
+  fn_return := (tptr (Tstruct _bst noattr));
+  fn_callconv := cc_default;
+  fn_params := ((_bst_ptr, (tptr (tptr (Tstruct _bst noattr)))) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_ret, (tptr (Tstruct _bst noattr))) ::
+               (_t'5, (tptr (Tstruct _bst noattr))) ::
+               (_t'4, (tptr (Tstruct _bst noattr))) ::
+               (_t'3, (tptr (Tstruct _bst noattr))) ::
+               (_t'2, (tptr (Tstruct _bst noattr))) ::
+               (_t'1, (tptr (Tstruct _bst noattr))) :: nil);
+  fn_body :=
+(Sloop
+  (Ssequence
+    Sskip
+    (Ssequence
+      (Sset _t'1
+        (Ederef (Etempvar _bst_ptr (tptr (tptr (Tstruct _bst noattr))))
+          (tptr (Tstruct _bst noattr))))
+      (Ssequence
+        (Sset _t'2
+          (Efield
+            (Ederef (Etempvar _t'1 (tptr (Tstruct _bst noattr)))
+              (Tstruct _bst noattr)) _left (tptr (Tstruct _bst noattr))))
+        (Sifthenelse (Etempvar _t'2 (tptr (Tstruct _bst noattr)))
+          (Ssequence
+            (Sset _t'5
+              (Ederef (Etempvar _bst_ptr (tptr (tptr (Tstruct _bst noattr))))
+                (tptr (Tstruct _bst noattr))))
+            (Sset _bst_ptr
+              (Eaddrof
+                (Efield
+                  (Ederef (Etempvar _t'5 (tptr (Tstruct _bst noattr)))
+                    (Tstruct _bst noattr)) _left
+                  (tptr (Tstruct _bst noattr)))
+                (tptr (tptr (Tstruct _bst noattr))))))
+          (Ssequence
+            (Sset _ret
+              (Ederef (Etempvar _bst_ptr (tptr (tptr (Tstruct _bst noattr))))
+                (tptr (Tstruct _bst noattr))))
+            (Ssequence
+              (Ssequence
+                (Sset _t'3
+                  (Ederef
+                    (Etempvar _bst_ptr (tptr (tptr (Tstruct _bst noattr))))
+                    (tptr (Tstruct _bst noattr))))
+                (Ssequence
+                  (Sset _t'4
+                    (Efield
+                      (Ederef (Etempvar _t'3 (tptr (Tstruct _bst noattr)))
+                        (Tstruct _bst noattr)) _right
+                      (tptr (Tstruct _bst noattr))))
+                  (Sassign
+                    (Ederef
+                      (Etempvar _bst_ptr (tptr (tptr (Tstruct _bst noattr))))
+                      (tptr (Tstruct _bst noattr)))
+                    (Etempvar _t'4 (tptr (Tstruct _bst noattr))))))
+              (Sreturn (Some (Etempvar _ret (tptr (Tstruct _bst noattr)))))))))))
   Sskip)
 |}.
 
@@ -1319,11 +1384,7 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_new_bst, Gfun(Internal f_new_bst)) ::
  (_search_bst, Gfun(Internal f_search_bst)) ::
  (_insert_bst, Gfun(Internal f_insert_bst)) ::
- (_pop_min,
-   Gfun(External (EF_external "pop_min"
-                   (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
-     (Tcons (tptr (tptr (Tstruct _bst noattr))) Tnil)
-     (tptr (Tstruct _bst noattr)) cc_default)) ::
+ (_pop_min, Gfun(Internal f_pop_min)) ::
  (_delete_bst, Gfun(Internal f_delete_bst)) :: nil).
 
 Definition public_idents : list ident :=

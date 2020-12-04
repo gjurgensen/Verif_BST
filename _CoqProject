@@ -1,4 +1,6 @@
 -R . Verif_bst
 bst.v
 my_tactics.v
+bst_spec.v
+bst_holes.v
 Verif_bst.v

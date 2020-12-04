@@ -15,8 +15,8 @@ struct bst * new_bst(int key, int val) {
   bst = (struct bst *) malloc(sizeof(struct bst));
   bst->key = key;
   bst->val = val;
-  bst->left = NULL;
-  bst->right = NULL;
+  bst->left = (struct bst *)NULL;
+  bst->right = (struct bst *)NULL;
   return bst;
 }
 
@@ -51,7 +51,18 @@ void insert_bst(struct bst ** bst, int key, int val) {
 }
 
 // Returns a dangling bst node which needs to be freed after use
-struct bst * pop_min(struct bst ** bst_ptr);
+// Assumes bst is non-empty
+struct bst * pop_min(struct bst ** bst_ptr) {
+  for (;;) {
+    if ((*bst_ptr)->left)
+      bst_ptr = &(*bst_ptr)->left;
+    else {
+      struct bst * ret = *bst_ptr;
+      *bst_ptr = (*bst_ptr)->right;
+      return ret;
+    }
+  }
+}
 
 void delete_bst(struct bst ** parent_ptr, int key) {
   struct bst * parent = *parent_ptr;
@@ -164,7 +175,3 @@ void delete_bst(struct bst ** parent_ptr, int key) {
     }
   }
 }
-
-// TODO: Free
-
-// TODO: Merge?
