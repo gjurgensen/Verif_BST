@@ -1041,9 +1041,13 @@ Proof.
             - eapply path_shrink_l; [| |eassumption].
               + injection; intros; subst. 
                 admit.
+              + admit.
+            - admit.
           }
           admit.
           admit. 
+      + admit.
+      + admit.
   }
   repeat forward.
   simplify_assumps; subst.
