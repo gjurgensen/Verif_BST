@@ -965,12 +965,11 @@ Proof.
     EX a' l' r' curr_ptr min_z,
       PROP (
         min_z = fst (get_min a l r);
-        search_path min_z (node a l r) (node a' l' r');
-        node a' l' r' = node a l r -> curr_ptr = bst_ptr)
+        search_path min_z (node a l r) (node a' l' r'))
       LOCAL (
         gvars gv; temp _bst_ptr curr_ptr)
       SEP (
-        ptr_to_bst_hole_rep (bst_subtract_path min_z (node a l r) (node a' l' r')) bst_ptr;
+        ptr_to_bst_hole_rep (bst_subtract_path min_z (node a l r) (node a' l' r')) bst_ptr curr_ptr;
         ptr_to_bst_rep (node a' l' r') curr_ptr;
         mem_mgr gv)
   ).
@@ -1004,21 +1003,16 @@ Proof.
     simplify_assumps; subst.
     Exists l'a l'l l'r (field_address t_bst [StructField _left] curr) (fst (get_min a l r)).
     entailer!.
-    - split.
-      + eapply path_step_down_l; [eassumption|].
-        apply get_min_is_min in H0.
-        admit.
-      + intros. inversion H14; subst.
-        exfalso; eapply no_subtree_cycle_left.
-        eapply search_path_is_subtree.
-        eassumption.
+    - eapply path_step_down_l; [eassumption|].
+      apply get_min_is_min in H0.
+      admit.
     - 
       sep_apply generalize_node_rep.
       simpl bst_subtract_path.
       repeat destruct_pair.
       rewrite Zaux.Zcompare_Lt.
       rewrite Zaux.Zcompare_Lt.
-      + clear - H0 H2 H3.   
+      + clear - H0 H2.   
         simpl.
         Intros pl pr pl0 pr0 q pr1.
         Exists pl0 pr0.
@@ -1031,7 +1025,6 @@ Proof.
         unfold_data_at (data_at _ _ _ curr).
         cancel.
 
-        clear H3.   
         revert z3 z4 r H0 H2 pl0.
         induction l; intros.
         * simpl in H2. inversion H2; lia.
@@ -1047,8 +1040,10 @@ Proof.
             - inversion H0; assumption.
             - eapply path_shrink_l; [| |eassumption].
               + injection; intros; subst. 
+                admit.
           }
-          
+          admit.
+          admit. 
   }
   repeat forward.
   simplify_assumps; subst.
@@ -1064,7 +1059,7 @@ Proof.
   (* Exists nullval. *)
   (* EExists. *)
   (* entailer!. *)
-  clear - H0 H2 H3 H_min.
+  clear - H0 H2 H_min.
   revert pr0.
   induction l; intros.
   - simpl in *.
@@ -1126,4 +1121,7 @@ Proof.
       Intros pl0 pr1; Exists pl0 pr1.
       unfold_data_at (data_at _ _ _ parent).
       entailer!.
+      admit.
+      admit.
   }
+Admitted.
