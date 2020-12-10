@@ -4,6 +4,7 @@ This repo is an ongoing attempt to verify a Binary Search Tree (BST) data struct
 To build this project, you'll need the Coq theorem prover and the VST library.
 - See the Coq download page for instruction to download Coq: https://coq.inria.fr/download
 - Software Foundations has instructions for installing VST: https://softwarefoundations.cis.upenn.edu/vc-current/Preface.html#lab3
+
 This project is tested with Coq version 8.11 and VST version 2.6.
 
 ## Project Layout
