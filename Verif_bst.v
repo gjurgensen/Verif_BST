@@ -210,16 +210,6 @@ Definition Gprog: funspecs :=
 
 (* Proofs of C functions *)
 
-(* Theorem foo: forall b k curr_k v l r (curr head pl pr: val),
-  well_ordered b ->
-  search_path k b (node (curr_k, v) l r) ->
-  k < curr_k -> 
-    bst_hole_rep (bst_subtract_path k b (node (curr_k, v) l r)) head curr *
-    malloc_token Ews t_bst curr *
-    data_at Ews t_bst (Vint (Int.repr curr_k), (Vint (Int.repr v), (pl, pr))) curr *
-    bst_rep r pr
-    |-- bst_hole_rep (bst_subtract_path k b l) head pl. *)
-
 Theorem hole_rep_fuse_left : forall b k curr_k v l r (curr head pl pr: val),
   well_ordered b ->
   search_path k b (node (curr_k, v) l r) ->
