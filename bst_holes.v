@@ -102,7 +102,7 @@ Proof.
       destruct_pair.
       rewrite Z.compare_refl.
       reflexivity.
-  - inversion H_wo; subst.
+  - inv H_wo.
     simplify_assumps.
     destruct b.
     + simpl.
@@ -117,17 +117,17 @@ Proof.
       apply search_path_is_subtree in H_path.
       find_Z_compare_destruct.
       * eapply subtree_forall in H_path; [|eassumption].
-        inversion H_path; subst.
+        inv H_path.
         simpl in *.
         lia.
       * simpl.
         f_equal.
         assumption.
       * eapply subtree_forall in H_path; [|eapply H4].
-        inversion H_path; subst.
+        inv H_path.
         simpl in *.
         lia.
-  - inversion H_wo; subst.
+  - inv H_wo.
     simplify_assumps.
     destruct b.
     + simpl.
@@ -142,11 +142,11 @@ Proof.
       apply search_path_is_subtree in H_path.
       find_Z_compare_destruct.
       * eapply subtree_forall in H_path; [|eassumption].
-        inversion H_path; subst.
+        inv H_path.
         simpl in *.
         lia.
       * eapply subtree_forall in H_path; [|eapply H5].
-        inversion H_path; subst.
+        inv H_path.
         simpl in *.
         lia.
       * simpl.

@@ -66,14 +66,15 @@ Ltac auto_specialize :=
 
 Ltac my_crush := repeat constructor + easy + lia + assumption. 
 
-Ltac auto_ponens H := 
+Ltac auto_ponens_with H tac := 
   match type of H with
   | ?x -> ?y => 
       let H' := fresh in 
-      assert (H' : x) by my_crush;
+      assert (H' : x) by tac;
       specialize (H H');
       clear H'
   end.
+Ltac auto_ponens H := auto_ponens_with H my_crush.
 
 Theorem modus_tollens : forall {a b: Prop}, (a -> b) -> not b -> not a.
 Proof.
@@ -84,29 +85,39 @@ Proof.
   assumption.
 Qed.
 
-Ltac auto_tollens H :=
+Ltac auto_tollens_with H tac :=
   match type of H with
   | ?x -> ?y => 
       let H' := fresh in 
-      assert (H' : not y) by my_crush;
+      assert (H' : not y) by tac;
       let H'' := fresh in
       pose proof (modus_tollens H H') as H'';
       clear H; clear H';
       rename H'' into H
   end.
+Ltac auto_tollens H := auto_tollens_with H my_crush.
 
+Ltac simplify_implication_with H tac := auto_ponens_with H tac + auto_tollens_with H tac.
 Ltac simplify_implication H := auto_ponens H + auto_tollens H.
- 
-Ltac simplify_assumps :=
+
+Ltac is_prop x := 
+  match type of x with
+  | Prop => idtac
+  | _ => fail
+  end.
+
+Ltac simplify_assumps_with tac :=
   repeat match goal with 
   | [H : ?x = ?x |- _] => clear H
-  | [H : ?x, H' : ?x |- _] => clear H'
+  (* is_prop doesn't seem necessary? *)
+  | [H : ?x, H' : ?x |- _] => is_prop x; clear H'
   | [H : _ /\ _ |- _] => destruct H
-  | [H : _ -> _ |- _] => simplify_implication H
+  | [H : _ -> _ |- _] => simplify_implication_with H tac
   | [H : _ <-> _ |- _] => 
-      (destruct H as [H _]; simplify_implication H) +
-      (destruct H as [_ H]; simplify_implication H)
+      (destruct H as [H _]; simplify_implication_with H tac) +
+      (destruct H as [_ H]; simplify_implication_with H tac)
   end.
+Ltac simplify_assumps := simplify_assumps_with my_crush.
 
 Ltac find_solve_inversion := 
   match goal with 
@@ -137,3 +148,7 @@ Ltac mapply H :=
   | ?Q |-- ?R => apply (derives_trans _ Q R); [| apply H ]
   end.
 
+(* Modified tactics from StructTac: *)
+(* https://github.com/uwplse/StructTact/blob/master/theories/StructTactics.v *)
+Ltac inv H := inversion H; subst.
+Ltac invc H := inv H; clear H.

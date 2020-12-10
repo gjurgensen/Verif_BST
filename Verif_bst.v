@@ -8,6 +8,7 @@ Instance CompSpecs : compspecs. make_compspecs prog. Defined.
 Definition Vprog : varspecs.  mk_varspecs prog. Defined.
 
 Require Import Coq.Program.Equality.
+(* Require Import StructTact.StructTactics. *)
 
 Require Import my_tactics.
 Require Import bst_spec.
@@ -209,6 +210,16 @@ Definition Gprog: funspecs :=
 
 (* Proofs of C functions *)
 
+(* Theorem foo: forall b k curr_k v l r (curr head pl pr: val),
+  well_ordered b ->
+  search_path k b (node (curr_k, v) l r) ->
+  k < curr_k -> 
+    bst_hole_rep (bst_subtract_path k b (node (curr_k, v) l r)) head curr *
+    malloc_token Ews t_bst curr *
+    data_at Ews t_bst (Vint (Int.repr curr_k), (Vint (Int.repr v), (pl, pr))) curr *
+    bst_rep r pr
+    |-- bst_hole_rep (bst_subtract_path k b l) head pl. *)
+
 Theorem hole_rep_fuse_left : forall b k curr_k v l r (curr head pl pr: val),
   well_ordered b ->
   search_path k b (node (curr_k, v) l r) ->
@@ -222,13 +233,12 @@ Proof.
   intros.
   generalize dependent head.
   induction b; intros.
-  - inversion H0.
+  - inv H0.
   - simpl. destruct_pair.
     find_Z_compare_destruct.
     + apply search_path_is_subtree in H0.
       apply wo_node_eq in H0; [|assumption].
-      inversion H0; subst; clear H0.
-      simplify_assumps; subst.
+      invc H0.
       destruct l.
       * simpl.
         rewrite Zaux.Zcompare_Lt by assumption.
@@ -242,37 +252,21 @@ Proof.
         -- simpl.
            Exists pl pr.
            entailer!.
-        -- inversion H; subst.
-           inversion H5; subst.
+        -- inv H.
+           inv H5.
            simpl in *; assumption.
     + simpl in *.
       Intros head_pl head_pr.
       sep_apply IHb1.
-      * inversion H. assumption.
-      * inversion H0; subst.
-        -- lia.
-        -- assumption.
-        -- apply search_path_is_subtree in H9.
-           inversion H; subst.
-           eapply subtree_forall in H9; [|eassumption].
-           inversion H9; subst.
-           simpl in *.
-           lia.
+      * inv H. assumption.
+      * eapply path_shrink_l; eassumption.
       * destruct l.
         -- simpl. 
            rewrite Zaux.Zcompare_Lt.
            ++ simpl.
               Exists head_pl head_pr.
               entailer!.
-           ++ inversion H0; subst.
-              ** lia.
-              ** assumption.
-              ** apply search_path_is_subtree in H9.
-                 inversion H; subst.
-                 eapply subtree_forall in H9; [|eassumption].
-                 inversion H9; subst.
-                 simpl in *.
-                 lia.
+           ++ eapply path_extract_ord_l; eassumption.
         -- simpl.
            destruct_pair.
            rewrite Zaux.Zcompare_Lt.
@@ -282,38 +276,22 @@ Proof.
            ++ apply search_path_is_subtree in H0.
               apply wo_subtree_left in H0; try assumption.
               apply is_subtree_up_left in H0.
-              inversion H; subst.
+              inv H.
               eapply subtree_forall in H0; [|eassumption].
-              inversion H0; subst.
+              inv H0.
               simpl in *; assumption.
     + simpl in *.
       Intros head_pl head_pr.
       sep_apply IHb2.
-      * inversion H. assumption.
-      * inversion H0; subst.
-        -- lia.
-        -- apply search_path_is_subtree in H9.
-           inversion H; subst.
-           eapply subtree_forall in H9; [|eassumption].
-           inversion H9; subst.
-           simpl in *.
-           lia.
-        -- assumption.
+      * inv H. assumption.
+      * eapply path_shrink_r; eassumption + lia.
       * destruct l.
         -- simpl. 
            rewrite Zaux.Zcompare_Gt.
            ++ simpl.
               Exists head_pl head_pr.
               entailer!.
-           ++ inversion H0; subst.
-              ** lia.
-              ** apply search_path_is_subtree in H9.
-                 inversion H; subst.
-                 eapply subtree_forall in H9; [|eassumption].
-                 inversion H9; subst.
-                 simpl in *.
-                 lia.
-              ** lia.
+           ++ eapply path_extract_ord_r; try eassumption; lia.
         -- simpl.
            destruct_pair.
            rewrite Zaux.Zcompare_Gt.
@@ -323,9 +301,9 @@ Proof.
            ++ apply search_path_is_subtree in H0.
               apply wo_subtree_right in H0; try assumption.
               apply is_subtree_up_left in H0.
-              inversion H; subst.
+              inv H.
               eapply subtree_forall in H0; [|eassumption].
-              inversion H0; subst.
+              inv H0.
               simpl in *; lia.
 Qed.
 
@@ -342,13 +320,12 @@ Proof.
   intros.
   generalize dependent head.
   induction b; intros.
-  - inversion H0.
+  - inv H0.
   - simpl. destruct_pair.
     find_Z_compare_destruct.
     + apply search_path_is_subtree in H0.
       apply wo_node_eq in H0; [|assumption].
-      inversion H0; subst; clear H0.
-      simplify_assumps; subst.
+      invc H0.
       destruct r.
       * simpl.
         rewrite Zaux.Zcompare_Gt by lia.
@@ -362,79 +339,46 @@ Proof.
         -- simpl.
            Exists pl pr.
            entailer!.
-        -- inversion H; subst.
-           inversion H6; subst.
+        -- inv H.
+           inv H6.
            simpl in *; lia.
     + simpl in *.
       Intros head_pl head_pr.
       sep_apply IHb1.
-      * inversion H. assumption.
-      * inversion H0; subst.
-        -- lia.
-        -- assumption.
-        -- apply search_path_is_subtree in H9.
-           inversion H; subst.
-           eapply subtree_forall in H9; [|eassumption].
-           inversion H9; subst.
-           simpl in *.
-           lia.
+      * inv H. assumption.
+      * eapply path_shrink_l; eassumption.
       * destruct r.
         -- simpl. 
            rewrite Zaux.Zcompare_Lt.
            ++ simpl.
               Exists head_pl head_pr.
               entailer!.
-           ++ inversion H0; subst.
-              ** lia.
-              ** assumption.
-              ** apply search_path_is_subtree in H9.
-                 inversion H; subst.
-                 eapply subtree_forall in H9; [|eassumption].
-                 inversion H9; subst.
-                 simpl in *.
-                 lia.
+           ++ eapply path_extract_ord_l; eassumption.
         -- simpl.
            destruct_pair.
            rewrite Zaux.Zcompare_Lt.
            ++ simpl.
               Exists head_pl head_pr.
               entailer!.
-           ++ 
-              apply search_path_is_subtree in H0.
+           ++ apply search_path_is_subtree in H0.
               apply wo_subtree_left in H0; try assumption.
               apply is_subtree_up_right in H0.
-              inversion H; subst.
+              inv H.
               eapply subtree_forall in H0; [|eassumption].
-              inversion H0; subst.
+              inv H0.
               simpl in *; assumption.
     + simpl in *.
       Intros head_pl head_pr.
       sep_apply IHb2.
-      * inversion H. assumption.
-      * inversion H0; subst.
-        -- lia.
-        -- apply search_path_is_subtree in H9.
-           inversion H; subst.
-           eapply subtree_forall in H9; [|eassumption].
-           inversion H9; subst.
-           simpl in *.
-           lia.
-        -- assumption.
+      * inv H. assumption.
+      * eapply path_shrink_r; eassumption + lia.
       * destruct r.
         -- simpl. 
            rewrite Zaux.Zcompare_Gt.
            ++ simpl.
               Exists head_pl head_pr.
               entailer!.
-           ++ inversion H0; subst.
-              ** lia.
-              ** apply search_path_is_subtree in H9.
-                 inversion H; subst.
-                 eapply subtree_forall in H9; [|eassumption].
-                 inversion H9; subst.
-                 simpl in *.
-                 lia.
-              ** lia.
+           ++ eapply path_extract_ord_r; try eassumption; lia.
         -- simpl.
            destruct_pair.
            rewrite Zaux.Zcompare_Gt.
@@ -444,9 +388,9 @@ Proof.
            ++ apply search_path_is_subtree in H0.
               apply wo_subtree_right in H0; try assumption.
               apply is_subtree_up_right in H0.
-              inversion H; subst.
+              inv H.
               eapply subtree_forall in H0; [|eassumption].
-              inversion H0; subst.
+              inv H0.
               simpl in *; lia.
 Qed.
 
@@ -463,37 +407,32 @@ Proof.
         bst_hole_rep (bst_subtract_path k b curr_b) head curr;
         bst_rep curr_b curr; mem_mgr gv)
   ).
-  {
-    repeat EExists.
+  { repeat EExists.
     entailer!.
     - constructor.
     - rewrite bst_subtract_path_b_b.
       unfold bst_hole_rep.
-      entailer!.
-  }
+      entailer!. }
   Intros curr_b curr.
   forward_if.
-  {
-    forward.
+  { forward.
     simplify_assumps; subst.
     rewrite search_path_fail by assumption.
     EExists.
     entailer!.
     simpl.
-    entailer!.
-  }
+    entailer!. }
   assert_PROP (curr_b <> leaf) by (expand bst_rep; entailer!; find_contradiction). 
   destruct curr_b as [|[curr_k v] l r]; [contradiction|].
   expand bst_rep.
   Intros pl pr.
   forward.
   forward_if.
-  {
-    assert (k = curr_k).
+  { assert (k = curr_k).
     { apply repr_inj_signed; try assumption.
       apply search_path_is_subtree in H2.
       pose proof (subtree_forall _ _ _ H2 H0) as H11.
-      inversion H11; simpl in *; assumption. }
+      inv H11; simpl in *; assumption. }
     subst.
     forward.
     EExists.
@@ -501,34 +440,29 @@ Proof.
     entailer!.
     erewrite search_path_success by eassumption.
     sep_apply generalize_node_rep.
-    cancel.
-  }
+    cancel. }
   forward.
   forward_if.
   - assert (k < curr_k).
-    {
-      rewrite <- Int.signed_repr.
+    { rewrite <- Int.signed_repr.
       - assumption.
       - apply search_path_is_subtree in H2.
         eapply subtree_forall in H2; [|eassumption].
-        inversion H2; subst.
-        simpl in H10; assumption.
-    }
+        inv H2.
+        simpl in H10; assumption. }
     forward.
     Exists l pl.
     entailer!.
     + eapply path_step_down_l; eassumption.
     + apply hole_rep_fuse_left; assumption.
   - assert (k > curr_k).
-    {
-      apply search_path_is_subtree in H2.
+    { apply search_path_is_subtree in H2.
       pose proof (subtree_forall _ _ _ H2 H0) as H8.
       rewrite Int.signed_repr in H6.
       + enough (k <> curr_k). lia.
         apply repr_inj_signed'; try assumption.
-        inversion H8; simpl in *; assumption.
-      + inversion H8; simpl in *; assumption.
-    }
+        inv H8; simpl in *; assumption.
+      + inv H8; simpl in *; assumption. }
     forward.
     Exists r pr.
     entailer!.
@@ -551,8 +485,7 @@ Proof.
         ptr_to_bst_rep curr_b curr_ptr;
         mem_mgr gv)
   ).
-  {
-    Exists b bst_ptr.
+  { Exists b bst_ptr.
     entailer!.
     - constructor.
     - rewrite bst_subtract_path_b_b.
@@ -560,26 +493,22 @@ Proof.
       entailer!.
       unfold ptr_to_bst_rep.
       Exists head.
-      entailer!.
-  }
+      entailer!. }
   unfold ptr_to_bst_rep.
   Intros curr_b curr_ptr curr.
   forward.
   forward_if.
-  {
-    subst.
+  { subst.
     forward_call.
     Intros vret.
     repeat forward.
     simplify_assumps; subst.
     simpl bst_rep at 2; entailer!.
-
     revert H3.
     clear.
     generalize dependent bst_ptr.
     induction b; intros.
     - simpl.
-      simplify_assumps; subst.
       Intros pl pr.
       Exists vret pl pr.
       entailer!.
@@ -594,7 +523,7 @@ Proof.
         simpl ptr_to_bst_hole_rep.
         Intros q pr.
         sep_apply IHb1.
-        * inversion H3; subst; [assumption | lia].
+        * inv H3; [assumption | lia].
         * Intros a.
           Exists q.
           entailer!.
@@ -609,7 +538,7 @@ Proof.
         simpl ptr_to_bst_hole_rep.
         Intros q pl.
         sep_apply IHb2.
-        * inversion H3; subst; [lia | assumption].
+        * inv H3; [lia | assumption].
         * Intros a.
           Exists q.
           entailer!.
@@ -619,55 +548,50 @@ Proof.
           Exists pl a.
           entailer!.
           unfold_data_at (data_at _ _ _ q).
-          entailer!.
-  }
+          entailer!. }
   assert_PROP (curr_b <> leaf) by (expand bst_rep; entailer!; find_contradiction). 
   destruct curr_b as [|[curr_k curr_v] l r]; [contradiction|].
   expand bst_rep.
   Intros pl pr.
   repeat forward.
-  forward_if.
-  {
+  forward_if. {
     repeat forward.
     assert (k = curr_k).
     { apply repr_inj_signed; try assumption.
       apply search_path_is_subtree in H3.
       eapply subtree_forall in H3; [|eassumption].
-      inversion H3; simpl in *; assumption. }
+      inv H3; simpl in *; assumption. }
     subst.
     simpl.
     sep_apply generalize_node_rep.
     sep_apply generalize_ptr_to_node_rep.
-
     assert ((
       ptr_to_bst_rep (insert curr_k v b) bst_ptr * mem_mgr gv
       =
       EX a : val,
       data_at Ews (tptr t_bst) a bst_ptr *
       (bst_rep (insert curr_k v b) a * mem_mgr gv)
-    )%logic) by (apply pred_ext; unfold ptr_to_bst_rep; Intros q; Exists q; entailer!).
-    rewrite <- H14.
+    )%logic) by (apply pred_ext; unfold ptr_to_bst_rep; Intros q; Exists q; entailer!);
+    rewrite <- H14; clear H14.
     entailer!.
-
-    revert H2 H3.   
+    revert bst_ptr H2 H3.   
     clear.
-    revert bst_ptr.
     induction b; intros.
-    - inversion H3.
+    - inv H3.
     - simpl.
       destruct_pair.
       find_Z_compare_destruct.
-      + simpl; cancel.
+      + simpl.
+        entailer!. 
         apply search_path_is_subtree in H3.
         apply wo_node_eq in H3; [|assumption].
-        inversion H3; subst.
-        simplify_assumps; subst.
+        inv H3.
         entailer!.
       + simpl.
         Intros q pr.
         sep_apply IHb1.
-        * inversion H2; assumption.
-        * inversion H3; subst; lia + assumption.
+        * inv H2; assumption.
+        * inv H3; lia + assumption.
         * unfold ptr_to_bst_rep.
           Intros pl.
           Exists q.
@@ -679,8 +603,8 @@ Proof.
       + simpl.
         Intros q pl.
         sep_apply IHb2.
-        * inversion H2; assumption.
-        * inversion H3; subst; lia + assumption.
+        * inv H2; assumption.
+        * inv H3; lia + assumption.
         * unfold ptr_to_bst_rep.
           Intros pr.
           Exists q.
@@ -688,20 +612,16 @@ Proof.
           simpl.
           Exists pl pr.
           unfold_data_at (data_at _ _ _ q).
-          entailer!.
-  }
+          entailer!. }
   repeat forward.
   forward_if.
-  {
-    assert (k < curr_k).
-    {
-      rewrite <- Int.signed_repr.
+  { assert (k < curr_k).
+    { rewrite <- Int.signed_repr.
       - assumption.
       - apply search_path_is_subtree in H3.
         eapply subtree_forall in H3; [|eassumption].
-        inversion H3; subst.
-        simpl in *; assumption.
-    }
+        inv H3.
+        simpl in *; assumption. }
     repeat forward.
     simpl offset_val.
     entailer!.
@@ -712,14 +632,14 @@ Proof.
       simpl bst_subtract_path.
       revert bst_ptr H2 H3.   
       clear - H8.
-      induction b; intros; [inversion H3|].
+      induction b; intros; [inv H3|].
       simpl.
       Intros pl pr.
       destruct_pair.
       find_Z_compare_destruct.
       + apply search_path_is_subtree in H3.
         apply wo_node_eq in H3; [|assumption].
-        inversion H3; subst.
+        inv H3.
         simplify_assumps; subst.
         destruct l.
         * simpl.
@@ -741,15 +661,15 @@ Proof.
              unfold_data_at (data_at _ _ _ curr).
              entailer!.
              apply generalize_node_rep.
-          -- inversion H2; subst.
-             inversion H5; subst.
+          -- inv H2.
+             inv H5.
              simpl in H3; assumption.
       + simpl.
         Intros q pr'.
         sep_apply generalize_node_rep.
         sep_apply IHb1.
-        * inversion H2; assumption.
-        * inversion H3; lia + assumption.
+        * inv H2; assumption.
+        * inv H3; lia + assumption.
         * cancel.
           destruct l.
           -- simpl.
@@ -757,31 +677,25 @@ Proof.
              ++ simpl.
                 Exists q pr'.
                 entailer!.
-             ++ inversion H3; lia.
+             ++ inv H3; lia.
           -- simpl.
              destruct_pair.
              rewrite Zaux.Zcompare_Lt.
              ++ simpl.
                 Exists q pr'.
                 entailer!.
-             ++ inversion H3; subst; try lia.
+             ++ inv H3; try lia.
                 apply search_path_is_subtree in H9.
-                apply subtree_well_ordered in H9; [|inversion H2; assumption].
-                inversion H9; subst.
-                inversion H6; subst.
+                apply subtree_well_ordered in H9; [|inv H2; assumption].
+                inv H9.
+                inv H6.
                 simpl in H5; lia.
       + simpl.
         Intros q pl'.
         sep_apply generalize_node_rep.
         sep_apply IHb2.
-        * inversion H2; assumption.
-        * inversion H3; subst.
-          -- lia.
-          -- apply search_path_is_subtree in H9.
-             eapply subtree_forall in H9; [| inversion H2; eassumption].
-             inversion H9; subst.
-             simpl in H5; lia.
-          -- assumption.
+        * inv H2; assumption.
+        * eapply path_shrink_r; try eassumption; lia.
         * cancel.
           destruct l.
           -- simpl.
@@ -789,10 +703,10 @@ Proof.
              ++ simpl.
                 Exists q pl'.
                 entailer!.
-             ++ inversion H3; subst; try lia.
+             ++ inv H3; try lia.
                 apply search_path_is_subtree in H9.
-                eapply subtree_forall in H9; [| inversion H2; eassumption].
-                inversion H9; subst.
+                eapply subtree_forall in H9; [| inv H2; eassumption].
+                inv H9.
                 simpl in H5; lia.
           -- simpl.
              destruct_pair.
@@ -803,21 +717,17 @@ Proof.
              ++ apply search_path_is_subtree in H3.
                 apply wo_subtree_right in H3; [|assumption|lia].
                 apply is_subtree_up_left in H3.
-                eapply subtree_forall in H3; [|inversion H2; eassumption].
-                inversion H3; subst.
-                simpl in H5; lia.
-  }
-  {
-    assert (k > curr_k).
-    {
-      apply search_path_is_subtree in H3.
+                eapply subtree_forall in H3; [|inv H2; eassumption].
+                inv H3.
+                simpl in H5; lia. }
+  { assert (k > curr_k).
+    { apply search_path_is_subtree in H3.
       eapply subtree_forall in H3; [|eassumption].
       rewrite Int.signed_repr in H7.
       + enough (k <> curr_k). lia.
         apply repr_inj_signed'; try assumption.
-        inversion H3; simpl in *; assumption.
-      + inversion H3; simpl in *; assumption.
-    }
+        inv H3; simpl in *; assumption.
+      + inv H3; simpl in *; assumption. }
     repeat forward.
     simpl offset_val.
     entailer!.
@@ -828,14 +738,14 @@ Proof.
       simpl bst_subtract_path.
       revert bst_ptr H2 H3.   
       clear - H8.
-      induction b; intros; [inversion H3|].
+      induction b; intros; [inv H3|].
       simpl.
       Intros pl pr.
       destruct_pair.
       find_Z_compare_destruct.
       + apply search_path_is_subtree in H3.
         apply wo_node_eq in H3; [|assumption].
-        inversion H3; subst.
+        inv H3.
         simplify_assumps; subst.
         destruct r.
         * simpl.
@@ -857,21 +767,15 @@ Proof.
              unfold_data_at (data_at _ _ _ curr).
              entailer!.
              apply generalize_node_rep.
-          -- inversion H2; subst.
-             inversion H6; subst.
+          -- inv H2.
+             inv H6.
              simpl in H3; lia.
       + simpl.
         Intros q pr'.
         sep_apply generalize_node_rep.
         sep_apply IHb1.
-        * inversion H2; assumption.
-        * inversion H3; subst.
-          -- lia.
-          -- assumption.
-          -- apply search_path_is_subtree in H9.
-             eapply subtree_forall in H9; [| inversion H2; eassumption].
-             inversion H9; subst.
-             simpl in H5; lia.
+        * inv H2; assumption.
+        * eapply path_shrink_l; eassumption.
         * cancel.
           destruct r.
           -- simpl.
@@ -879,42 +783,30 @@ Proof.
              ++ simpl.
                 Exists q pr'.
                 entailer!.
-             ++ inversion H3; subst.
-                ** lia.
-                ** assumption.   
-                ** apply search_path_is_subtree in H9.
-                   eapply subtree_forall in H9; [| inversion H2; eassumption].
-                   inversion H9; subst.
-                   simpl in H5; lia.
+             ++ eapply path_extract_ord_l; eassumption.
           -- simpl.
              destruct_pair.
              rewrite Zaux.Zcompare_Lt.
              ++ simpl.
                 Exists q pr'.
                 entailer!.
-             ++ inversion H3; subst.
+             ++ inv H3.
                 ** lia.
                 ** apply search_path_is_subtree in H9.
                    apply is_subtree_up_right in H9.
-                   eapply subtree_forall in H9; [| inversion H2; eassumption].
-                   inversion H9; subst.
+                   eapply subtree_forall in H9; [| inv H2; eassumption].
+                   inv H9.
                    simpl in H5; lia.
                 ** apply search_path_is_subtree in H9.
-                   eapply subtree_forall in H9; [| inversion H2; eassumption].
-                   inversion H9; subst.
+                   eapply subtree_forall in H9; [| inv H2; eassumption].
+                   inv H9.
                    simpl in H5; lia.
       + simpl.
         Intros q pl'.
         sep_apply generalize_node_rep.
         sep_apply IHb2.
-        * inversion H2; assumption.
-        * inversion H3; subst.
-          -- lia.
-          -- apply search_path_is_subtree in H9.
-             eapply subtree_forall in H9; [| inversion H2; eassumption].
-             inversion H9; subst.
-             simpl in H5; lia.
-          -- assumption.
+        * inv H2; assumption.
+        * eapply path_shrink_r; try eassumption; lia.
         * cancel.
           destruct r.
           -- simpl.
@@ -922,7 +814,7 @@ Proof.
              ++ simpl.
                 Exists q pl'.
                 entailer!.
-             ++ inversion H3; lia.
+             ++ inv H3; lia.
           -- simpl.
              destruct_pair.
              rewrite Zaux.Zcompare_Gt.
@@ -932,31 +824,12 @@ Proof.
              ++ apply search_path_is_subtree in H3.
                 apply wo_subtree_right in H3; [|assumption|lia].
                 apply is_subtree_up_right in H3.
-                eapply subtree_forall in H3; [|inversion H2; eassumption].
-                inversion H3; subst.
-                simpl in H5; lia.
-  }
+                eapply subtree_forall in H3; [|inv H2; eassumption].
+                inv H3.
+                simpl in H5; lia. }
 Qed.
 
 (* Proofs incomplete / outdated beyond this point *)
-
-Theorem path_shrink_l : forall k k' v l r b,
-  (* well_ordered (node (k',v) l r) -> *)
-  node (k',v) l r <> b ->
-  k < k' -> search_path k (node (k',v) l r) b -> search_path k l b.
-Proof.
-  (* intros.
-  induction l.
-  - inversion H2; subst.
-    + contradiction.
-    + assumption.
-    + lia.
-  - destruct a.
-    reflect_destruct_Z_compare k z.
-    + inversion H1; subst; try lia.
-      *  *)
-Admitted.
-
 
 Theorem body_pop_min: semax_body Vprog Gprog f_pop_min pop_min_spec.
 Proof.
@@ -1027,7 +900,7 @@ Proof.
 
         revert z3 z4 r H0 H2 pl0.
         induction l; intros.
-        * simpl in H2. inversion H2; lia.
+        * simpl in H2. inv H2; lia.
         *
           simpl in *.
           destruct_pair. 
@@ -1037,10 +910,9 @@ Proof.
             simpl.
             Intros q0 pr2. Exists q0 pr2.
             sep_apply (IHl1 z5 z6 l2).
-            - inversion H0; assumption.
+            - inv H0; assumption.
             - eapply path_shrink_l; [| |eassumption].
-              + injection; intros; subst. 
-                admit.
+              + admit.
               + admit.
             - admit.
           }
@@ -1067,8 +939,8 @@ Proof.
   revert pr0.
   induction l; intros.
   - simpl in *.
-    inversion H_min; subst.
-    inversion H2; subst; try lia.
+    inv H_min; subst.
+    inv H2; subst; try lia.
     simplify_assumps; subst.
 Admitted.
 
@@ -1098,8 +970,8 @@ Proof.
     - unfold_data_at (data_at _ _ _ parent).
       entailer!.
     - split.
-      + inversion H0; assumption.
-      + inversion H1; assumption.
+      + inv H0; assumption.
+      + inv H1; assumption.
     - Intros vret.
       expand bst_rep.
       destruct (get_min ra rl rr) eqn:H_min.

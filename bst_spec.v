@@ -56,7 +56,7 @@ Theorem subtree_forall : forall {A} sub b (p: A -> Prop),
 Proof.
   intros.
   induction H;
-  try (apply IHis_subtree; inversion H0);
+  try (apply IHis_subtree; inv H0);
   assumption.
 Qed.
 
@@ -67,11 +67,11 @@ Proof.
   induction b.
   - destruct sub.
     + constructor.
-    + inversion H.
-  - inversion H; subst.
+    + inv H.
+  - inv H.
     + assumption.
-    + inversion H0; apply IHb1; assumption.
-    + inversion H0; apply IHb2; assumption.
+    + inv H0; apply IHb1; assumption.
+    + inv H0; apply IHb2; assumption.
 Qed.
 
 Theorem is_subtree_up_left {A}: forall (a: A) l r b,
@@ -110,7 +110,7 @@ Proof.
   induction l.
   - discriminate.
   - apply IHl1.
-    inversion H.
+    inv H.
     rewrite H2 at 1.
     reflexivity.
 Qed.
@@ -123,7 +123,7 @@ Proof.
   induction r.
   - discriminate.
   - apply IHr2.
-    inversion H.
+    inv H.
     rewrite H3 at 1.
     reflexivity.
 Qed.
@@ -167,15 +167,15 @@ Lemma wo_node_eq {A} : forall k (v1 v2: A) l1 l2 r1 r2,
   node (k,v1) l1 r1 = node (k,v2) l2 r2.
 Proof.
   intros.
-  inversion H0; subst.
+  inv H0.
   - reflexivity. 
-  - inversion H; subst. 
+  - inv H. 
     eapply subtree_forall in H3; [|eassumption].
-    inversion H3; subst.
+    inv H3.
     simpl in H5. lia.
-  - inversion H; subst. 
+  - inv H.
     eapply subtree_forall in H3; [|eassumption].
-    inversion H3; subst.
+    inv H3.
     simpl in H5. lia.
 Qed.
 
@@ -186,12 +186,12 @@ Lemma wo_subtree_left {A} : forall k1 k2 (v1 v2: A) l1 l2 r1 r2,
   is_subtree (node (k2,v2) l2 r2) l1.
 Proof.
   intros.
-  inversion H0; subst.
+  inv H0.
   - lia.
   - assumption.
-  - inversion H; subst.
+  - inv H.
     eapply subtree_forall in H4; [|eassumption].
-    inversion H4; subst.
+    inv H4.
     simpl in H6. lia.
 Qed.
 
@@ -202,11 +202,11 @@ Lemma wo_subtree_right {A} : forall k1 k2 (v1 v2: A) l1 l2 r1 r2,
   is_subtree (node (k2,v2) l2 r2) r1.
 Proof.
   intros.
-  inversion H0; subst.
+  inv H0.
   - lia.
-  - inversion H; subst.
+  - inv H.
     eapply subtree_forall in H4; [|eassumption].
-    inversion H4; subst.
+    inv H4.
     simpl in H6. lia.
   - assumption.
 Qed.
@@ -231,8 +231,8 @@ Theorem search_spec {A} : forall (b: bst A) k v l r,
 Proof.
   intros.
   induction b.
-  - inversion H0.
-  - inversion H; subst.
+  - inv H0.
+  - inv H.
     simplify_assumps.
     simpl.
     find_Z_compare_destruct.
@@ -289,7 +289,7 @@ Proof.
   induction b; intro H0; simpl.
   - constructor; assumption.
   - destruct_pair. find_Z_compare_destruct;
-    inversion H0; subst; constructor; 
+    inv H0; constructor; 
     try (apply IHb1 + apply IHb2); 
     assumption.
 Qed.
@@ -299,7 +299,7 @@ Theorem insert_well_ordered {A}: forall (b: bst A) k v,
 Proof.
   intro b; induction b; intros k v H; simpl.
   - repeat constructor.
-  - inversion H; subst.
+  - inv H.
     find_Z_compare_destruct;
     constructor; try (apply insert_forall + apply IHb1 + apply IHb2); assumption.
 Qed.
@@ -336,9 +336,9 @@ Lemma get_min_forall {A} : forall (p: (Z * A) -> Prop) a l r,
 Proof.
   intros p a l; revert p a.
   induction l; intros; simpl.
-  - inversion H; assumption.
+  - inv H; assumption.
   - apply IHl1.
-    inversion H; assumption.
+    inv H; assumption.
 Qed.
 
 Lemma rm_min_forall {A} : forall (p: (Z * A) -> Prop) a l r,
@@ -346,11 +346,11 @@ Lemma rm_min_forall {A} : forall (p: (Z * A) -> Prop) a l r,
 Proof.
   intros p a l; revert p a.
   induction l; intros; simpl.
-  - inversion H; assumption.
+  - inv H; assumption.
   - constructor.
-    + inversion H; assumption.
-    + apply IHl1. inversion H; assumption.
-    + inversion H; assumption.
+    + inv H; assumption.
+    + apply IHl1. inv H; assumption.
+    + inv H; assumption.
 Qed.
 
 Lemma get_min_is_min {A} : forall (a: Z * A) l r,
@@ -359,13 +359,13 @@ Lemma get_min_is_min {A} : forall (a: Z * A) l r,
 Proof.
   intros a l; revert a.
   induction l; intros; simpl.
-  - inversion H; assumption.
+  - inv H; assumption.
   - constructor.
-    + inversion H; subst.
+    + inv H.
       apply get_min_forall in H3.
       simpl. lia.
-    + apply IHl1. inversion H; assumption.
-    + inversion H; subst.
+    + apply IHl1. inv H; assumption.
+    + inv H.
       eapply bin_tree_forall_strengthen; [|eassumption].
       intros [x].
       simpl.
@@ -380,7 +380,7 @@ Lemma get_min_is_min_2 {A} : forall (a: Z * A) l r,
 Proof.
   intros a l; revert a.
   induction l; intros; simpl.
-  - inversion H; subst.
+  - inv H.
     constructor.
     + lia.
     + constructor.
@@ -388,12 +388,12 @@ Proof.
       eapply bin_tree_forall_strengthen; [|eassumption]. 
       intros [x].
       lia.
-  - inversion H; subst.
+  - inv H.
     constructor.
     + specialize (IHl1 a l2 H5).
-      inversion IHl1; subst.
+      inv IHl1.
       simpl.
-      inversion H3; subst.
+      inv H3.
       lia.
     + apply IHl1.
       assumption.
@@ -410,12 +410,12 @@ Theorem rm_min_well_ordered {A} : forall (a: Z * A) l r,
 Proof.
   intros a l; revert a.
   induction l; intros; simpl.
-  - inversion H; assumption.
+  - inv H; assumption.
   - destruct a0; constructor.
-    + apply rm_min_forall. inversion H; assumption.
-    + inversion H; assumption.
-    + apply IHl1. inversion H; assumption.
-    + inversion H; assumption.
+    + apply rm_min_forall. inv H; assumption.
+    + inv H; assumption.
+    + apply IHl1. inv H; assumption.
+    + inv H; assumption.
 Qed.
 
 Fixpoint delete {A} (k: Z) (b: bst A) : bst A := 
@@ -441,15 +441,15 @@ Proof.
   intros p k b.
   induction b as [|[k' v] l IH1 r IH2]; intro H; simpl; [assumption|].
   find_Z_compare_destruct.
-  - destruct l, r; try (inversion H; assumption).
+  - destruct l, r; try (inv H; assumption).
     constructor.
     + apply get_min_forall.
-      inversion H; assumption.
-    + inversion H; assumption.
+      inv H; assumption.
+    + inv H; assumption.
     + apply rm_min_forall.
-      inversion H; assumption.
-  - apply IH1. inversion H; assumption.
-  - apply IH2. inversion H; assumption.
+      inv H; assumption.
+  - apply IH1. inv H; assumption.
+  - apply IH2. inv H; assumption.
 Qed.
 
 Theorem delete_well_ordered {A}: forall (b: bst A) k, 
@@ -457,10 +457,10 @@ Theorem delete_well_ordered {A}: forall (b: bst A) k,
 Proof.
   intros b; induction b as [|[k' v] l IH1 r IH2]; intros k H; simpl; [constructor|].
   find_Z_compare_destruct.
-  - destruct l, r; try (inversion H; assumption).
+  - destruct l, r; try (inv H; assumption).
     destruct (get_min p0 r1 r2) eqn:H_min.
     constructor.
-    + inversion H; subst.
+    + inv H; subst.
       eapply bin_tree_forall_strengthen; [|eassumption].
       intros [x].
       simpl.
@@ -470,12 +470,12 @@ Proof.
       lia.
     + replace z with (fst (get_min p0 r1 r2)) by (rewrite H_min; reflexivity).
       apply get_min_is_min.
-      inversion H; assumption.
-    + inversion H; assumption.
+      inv H; assumption.
+    + inv H; assumption.
     + apply rm_min_well_ordered.
-      inversion H; assumption.
-  - apply IH1. inversion H; assumption.
-  - apply IH2. inversion H; assumption.
+      inv H; assumption.
+  - apply IH1. inv H; assumption.
+  - apply IH2. inv H; assumption.
 Qed.
 
 (* search_path: This describes a point in a key-search traversal, commonly used to express 
@@ -569,4 +569,76 @@ Proof.
   - constructor.
   - apply is_subtree_left. assumption.
   - apply is_subtree_right. assumption.
+Qed.
+
+Theorem path_shrink_l : forall k_search k k' v v' l l' r r',
+  well_ordered (node (k,v) l r) ->
+  k' < k ->
+  search_path k_search (node (k,v) l r) (node (k',v') l' r') ->
+  search_path k_search l (node (k',v') l' r').
+Proof.
+  intros.
+  inv H1.
+  - lia.
+  - assumption.
+  - apply search_path_is_subtree in H8.
+    inv H.
+    eapply subtree_forall in H8; [|eassumption].
+    inv H8.
+    simpl in *.
+    lia.
+Qed.
+
+Theorem path_shrink_r : forall k_search k k' v v' l l' r r',
+  well_ordered (node (k,v) l r) ->
+  k < k' ->
+  search_path k_search (node (k,v) l r) (node (k',v') l' r') ->
+  search_path k_search r (node (k',v') l' r').
+Proof.
+  intros.
+  inv H1.
+  - lia.
+  - apply search_path_is_subtree in H8.
+    inv H.
+    eapply subtree_forall in H8; [|eassumption].
+    inv H8.
+    simpl in *.
+    lia.
+  - assumption.
+Qed.
+
+Theorem path_extract_ord_l : forall k_search k k' v v' l l' r r',
+  well_ordered (node (k,v) l r) ->
+  k' < k ->
+  search_path k_search (node (k,v) l r) (node (k',v') l' r') ->
+  k_search < k.
+Proof.
+  intros.
+  inv H1.
+  - lia.
+  - assumption.
+  - apply search_path_is_subtree in H8.
+    inv H.
+    eapply subtree_forall in H8; [|eassumption].
+    inv H8.
+    simpl in *.
+    lia.
+Qed.
+
+Theorem path_extract_ord_r : forall k_search k k' v v' l l' r r',
+  well_ordered (node (k,v) l r) ->
+  k < k' ->
+  search_path k_search (node (k,v) l r) (node (k',v') l' r') ->
+  k < k_search.
+Proof.
+  intros.
+  inv H1.
+  - lia.
+  - apply search_path_is_subtree in H8.
+    inv H.
+    eapply subtree_forall in H8; [|eassumption].
+    inv H8.
+    simpl in *.
+    lia.
+  - lia.
 Qed.
