@@ -45,6 +45,20 @@ Inductive is_subtree {A} : bin_tree A -> bin_tree A -> Prop :=
 
 (* Definition proper_subtree {A} (b1 b2: bin_tree A) := b1 <> b2 /\ is_subtree b1 b2. *)
 
+Theorem is_subtree_trans {A} : forall (a b c : bst A),
+  is_subtree a b -> is_subtree b c -> is_subtree a c.
+Proof.
+  intros a b c; revert a b.
+  induction c; intros.
+  - inv H0. assumption.
+  - inv H0.
+    + assumption.
+    + apply is_subtree_left.
+      eapply IHc1; eassumption.
+    + apply is_subtree_right.
+      eapply IHc2; eassumption.
+Qed.
+
 Lemma is_subtree_leaf : forall {A} (b: bin_tree A), is_subtree leaf b.
 Proof.
   intros A b.
@@ -100,6 +114,28 @@ Proof.
   - apply is_subtree_right.
     eapply IHis_subtree.
     reflexivity.
+Qed.
+
+Theorem wo_left {A} : forall k k' (v v': A) l l' r r',
+  well_ordered (node (k,v) l r) -> is_subtree (node (k',v') l' r') l -> k' < k.
+Proof.
+  intros.
+  invc H.
+  eapply subtree_forall in H0; [| eassumption].
+  invc H0.
+  simpl in H3.
+  assumption.
+Qed.
+
+Theorem wo_right {A} : forall k k' (v v': A) l l' r r',
+  well_ordered (node (k,v) l r) -> is_subtree (node (k',v') l' r') r -> k < k'.
+Proof.
+  intros.
+  invc H.
+  eapply subtree_forall in H0; [| eassumption].
+  invc H0.
+  simpl in H3.
+  lia.
 Qed.
 
 Lemma no_infinite_node_left {A} : forall (a: A) l r,
@@ -642,3 +678,67 @@ Proof.
     lia.
   - lia.
 Qed.
+
+(* Bst-specific Ltac *)
+
+(* Finds *trivial* subtrees *)
+Ltac bst_subtrees :=
+  repeat match goal with 
+  | [b: bin_tree _ |- _] => pose_new_proof (is_subtree_refl b)
+  | [_: context[node ?a ?l ?r] |- _] =>
+      pose_new_proof (is_subtree_refl (node a l r)) +
+      pose_new_proof (is_subtree_left  l a l r (is_subtree_refl l)) +
+      pose_new_proof (is_subtree_right r a l r (is_subtree_refl r))
+  | [H: search_path _ _ _ |- _] => pose_new_proof (search_path_is_subtree _ _ _ H)
+  | [H1: is_subtree (node _ _ _) ?b,
+     H2: is_subtree ?b _ |- _] =>
+       match b with
+       | node _ _ _ => fail
+       | _ => pose_new_proof (is_subtree_trans _ _ _ H1 H2)
+       end
+  end.
+
+(* Ltac normalize_ord := 
+  repeat match goal with 
+  | [H: _ > _ |- _] => apply Z.gt_lt in H
+  end. *)
+
+Ltac bst_ord :=
+  bst_subtrees;
+  repeat match goal with 
+  | [H0: well_ordered (node _ ?l _),
+     H1: is_subtree (node _ _ _) ?l |- _] => pose_new_proof (wo_left _ _ _ _ _ _ _ _ H0 H1)
+  | [H0: well_ordered (node _ _ ?r),
+     H1: is_subtree (node _ _ _) ?r |- _] => pose_new_proof (wo_right _ _ _ _ _ _ _ _ H0 H1)
+  | [H0: well_ordered (node (?k, ?v) ?l ?r),
+     H1: search_path _ (node (?k, ?v) ?l ?r) (node (?k', _) _ _) |- _] =>
+       let H_ord := fresh in 
+       assert (H_ord: k' < k) by (assumption + lia);  
+       pose_new_proof (path_shrink_l _ _ _ _ _ _ _ _ _ H0 H_ord H1);
+       pose_new_proof (path_extract_ord_l _ _ _ _ _ _ _ _ _ H0 H_ord H1);
+       clear H_ord
+  | [H0: well_ordered (node (?k, ?v) ?l ?r),
+     H1: search_path _ (node (?k, ?v) ?l ?r) (node (?k', _) _ _) |- _] =>
+       let H_ord := fresh in 
+       assert (H_ord: k < k') by (assumption + lia);  
+       pose_new_proof (path_shrink_r _ _ _ _ _ _ _ _ _ H0 H_ord H1);
+       pose_new_proof (path_extract_ord_r _ _ _ _ _ _ _ _ _ H0 H_ord H1);
+       clear H_ord
+  | [H0: well_ordered ?b,
+     H1: is_subtree ?sub ?b |- _] => pose_new_proof (subtree_well_ordered _ _ H1 H0)
+  end.
+
+Ltac bst_facts :=
+  repeat (assumption + lia + bst_subtrees + bst_ord);
+  repeat match goal with 
+  | [H0: well_ordered (node _ _ _),
+     H1: is_subtree (node (?z,_) _ _) (node (?z,_) _ _) |- _] => 
+      let H_eq := fresh in 
+      pose_new_proof_as (wo_node_eq _ _ _ _ _ _ _ H0 H1) H_eq
+      invc H_eq
+  end;
+  try (assumption + lia).
+
+Ltac rewrite_Zcompare_bst_facts := 
+  rewrite Zaux.Zcompare_Lt by bst_facts +
+  rewrite Zaux.Zcompare_Gt by bst_facts.

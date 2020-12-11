@@ -32,16 +32,20 @@ Ltac unify_goal :=
   | [_:_ |- _ = _] => reflexivity
   end.
 
-(* Ltac fail_if_in_hyps H := 
+Ltac fail_if_in_hyps H := 
   let t := type of H in 
   lazymatch goal with 
   | [G : t |- _ ] => fail "This proposition is already assumed"
   | [_ : _ |- _ ] => idtac
   end.
 
+Ltac pose_new_proof_as H i :=
+  fail_if_in_hyps H;
+  pose proof H as i.
+
 Ltac pose_new_proof H := 
   fail_if_in_hyps H;
-  pose proof H. *)
+  pose proof H.
 
 Ltac auto_specialize := 
   repeat match goal with 

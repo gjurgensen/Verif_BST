@@ -229,6 +229,8 @@ Proof.
     + apply search_path_is_subtree in H0.
       apply wo_node_eq in H0; [|assumption].
       invc H0.
+      simplify_assumps.
+      (* bst_facts. *)
       destruct l.
       * simpl.
         rewrite Zaux.Zcompare_Lt by assumption.
@@ -238,63 +240,40 @@ Proof.
       * simpl.
         destruct_pair. 
         rewrite Z.compare_refl.
-        rewrite Zaux.Zcompare_Lt.
-        -- simpl.
-           Exists pl pr.
-           entailer!.
-        -- inv H.
-           inv H5.
-           simpl in *; assumption.
+        rewrite Zaux.Zcompare_Lt by bst_facts.
+        simpl.
+        Exists pl pr.
+        entailer!.
     + simpl in *.
       Intros head_pl head_pr.
-      sep_apply IHb1.
-      * inv H. assumption.
-      * eapply path_shrink_l; eassumption.
-      * destruct l.
-        -- simpl. 
-           rewrite Zaux.Zcompare_Lt.
-           ++ simpl.
-              Exists head_pl head_pr.
-              entailer!.
-           ++ eapply path_extract_ord_l; eassumption.
-        -- simpl.
-           destruct_pair.
-           rewrite Zaux.Zcompare_Lt.
-           ++ simpl.
-              Exists head_pl head_pr.
-              entailer!.
-           ++ apply search_path_is_subtree in H0.
-              apply wo_subtree_left in H0; try assumption.
-              apply is_subtree_up_left in H0.
-              inv H.
-              eapply subtree_forall in H0; [|eassumption].
-              inv H0.
-              simpl in *; assumption.
+      sep_apply IHb1; [bst_facts|bst_facts|].
+      destruct l.
+      * simpl. 
+        rewrite Zaux.Zcompare_Lt by bst_facts.
+        simpl.
+        Exists head_pl head_pr.
+        entailer!.
+      * simpl.
+        destruct_pair.
+        rewrite Zaux.Zcompare_Lt by bst_facts.
+        simpl.
+        Exists head_pl head_pr.
+        entailer!.
     + simpl in *.
       Intros head_pl head_pr.
-      sep_apply IHb2.
-      * inv H. assumption.
-      * eapply path_shrink_r; eassumption + lia.
-      * destruct l.
-        -- simpl. 
-           rewrite Zaux.Zcompare_Gt.
-           ++ simpl.
-              Exists head_pl head_pr.
-              entailer!.
-           ++ eapply path_extract_ord_r; try eassumption; lia.
-        -- simpl.
-           destruct_pair.
-           rewrite Zaux.Zcompare_Gt.
-           ++ simpl.
-              Exists head_pl head_pr.
-              entailer!.
-           ++ apply search_path_is_subtree in H0.
-              apply wo_subtree_right in H0; try assumption.
-              apply is_subtree_up_left in H0.
-              inv H.
-              eapply subtree_forall in H0; [|eassumption].
-              inv H0.
-              simpl in *; lia.
+      sep_apply IHb2; [bst_facts|bst_facts|].
+      destruct l.
+      * simpl. 
+        rewrite Zaux.Zcompare_Gt by bst_facts.
+        simpl.
+        Exists head_pl head_pr.
+        entailer!.
+      * simpl.
+        destruct_pair.
+        rewrite Zaux.Zcompare_Gt by bst_facts.
+        simpl.
+        Exists head_pl head_pr.
+        entailer!.
 Qed.
 
 Theorem hole_rep_fuse_right : forall b k curr_k v l r (curr head pl pr: val),
