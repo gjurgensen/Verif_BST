@@ -229,18 +229,16 @@ Proof.
     + apply search_path_is_subtree in H0.
       apply wo_node_eq in H0; [|assumption].
       invc H0.
-      simplify_assumps.
-      (* bst_facts. *)
       destruct l.
       * simpl.
-        rewrite Zaux.Zcompare_Lt by assumption.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists pl pr.
         entailer!.
       * simpl.
         destruct_pair. 
         rewrite Z.compare_refl.
-        rewrite Zaux.Zcompare_Lt by bst_facts.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists pl pr.
         entailer!.
@@ -249,13 +247,13 @@ Proof.
       sep_apply IHb1; [bst_facts|bst_facts|].
       destruct l.
       * simpl. 
-        rewrite Zaux.Zcompare_Lt by bst_facts.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists head_pl head_pr.
         entailer!.
       * simpl.
         destruct_pair.
-        rewrite Zaux.Zcompare_Lt by bst_facts.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists head_pl head_pr.
         entailer!.
@@ -264,13 +262,13 @@ Proof.
       sep_apply IHb2; [bst_facts|bst_facts|].
       destruct l.
       * simpl. 
-        rewrite Zaux.Zcompare_Gt by bst_facts.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists head_pl head_pr.
         entailer!.
       * simpl.
         destruct_pair.
-        rewrite Zaux.Zcompare_Gt by bst_facts.
+        rewrite_Zcompare_bst_facts.
         simpl.
         Exists head_pl head_pr.
         entailer!.

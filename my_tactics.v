@@ -123,6 +123,12 @@ Ltac simplify_assumps_with tac :=
   end.
 Ltac simplify_assumps := simplify_assumps_with my_crush.
 
+Ltac elim_redudants :=
+  repeat match goal with 
+  (* is_prop doesn't seem necessary? *)
+  | [H : ?x, H' : ?x |- _] => is_prop x; clear H'
+  end.
+
 Ltac find_solve_inversion := 
   match goal with 
   | [H : _ |- _] => solve [inversion H; my_crush]

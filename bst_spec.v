@@ -690,6 +690,8 @@ Ltac bst_subtrees :=
       pose_new_proof (is_subtree_left  l a l r (is_subtree_refl l)) +
       pose_new_proof (is_subtree_right r a l r (is_subtree_refl r))
   | [H: search_path _ _ _ |- _] => pose_new_proof (search_path_is_subtree _ _ _ H)
+  (* This is a limited version of transitivity. Only applies when the intermediate is not a node
+     (and therefore doesn't give good ordering info) *)
   | [H1: is_subtree (node _ _ _) ?b,
      H2: is_subtree ?b _ |- _] =>
        match b with
@@ -728,17 +730,17 @@ Ltac bst_ord :=
      H1: is_subtree ?sub ?b |- _] => pose_new_proof (subtree_well_ordered _ _ H1 H0)
   end.
 
-Ltac bst_facts :=
-  repeat (assumption + lia + bst_subtrees + bst_ord);
+Ltac bst_inv_node_eq :=
   repeat match goal with 
-  | [H0: well_ordered (node _ _ _),
+  | [H0: well_ordered (node (?z,_) _ _),
      H1: is_subtree (node (?z,_) _ _) (node (?z,_) _ _) |- _] => 
       let H_eq := fresh in 
-      pose_new_proof_as (wo_node_eq _ _ _ _ _ _ _ H0 H1) H_eq
+      pose_new_proof_as (wo_node_eq _ _ _ _ _ _ _ H0 H1) H_eq;
       invc H_eq
-  end;
-  try (assumption + lia).
+  end.
+
+Ltac bst_facts := repeat (assumption + lia + bst_subtrees + bst_ord + bst_inv_node_eq); elim_redudants.
 
 Ltac rewrite_Zcompare_bst_facts := 
-  rewrite Zaux.Zcompare_Lt by bst_facts +
-  rewrite Zaux.Zcompare_Gt by bst_facts.
+  (rewrite Zaux.Zcompare_Lt by bst_facts) +
+  (rewrite Zaux.Zcompare_Gt by bst_facts).
