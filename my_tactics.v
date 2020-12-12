@@ -110,24 +110,23 @@ Ltac is_prop x :=
   | _ => fail
   end.
 
-Ltac simplify_assumps_with tac :=
+Ltac clear_redundants :=
   repeat match goal with 
   | [H : ?x = ?x |- _] => clear H
-  (* is_prop doesn't seem necessary? *)
   | [H : ?x, H' : ?x |- _] => is_prop x; clear H'
+  end.
+
+Ltac simplify_assumps_with tac :=
+  repeat (
+  clear_redundants +
+  match goal with 
   | [H : _ /\ _ |- _] => destruct H
   | [H : _ -> _ |- _] => simplify_implication_with H tac
   | [H : _ <-> _ |- _] => 
       (destruct H as [H _]; simplify_implication_with H tac) +
       (destruct H as [_ H]; simplify_implication_with H tac)
-  end.
+  end).
 Ltac simplify_assumps := simplify_assumps_with my_crush.
-
-Ltac elim_redudants :=
-  repeat match goal with 
-  (* is_prop doesn't seem necessary? *)
-  | [H : ?x, H' : ?x |- _] => is_prop x; clear H'
-  end.
 
 Ltac find_solve_inversion := 
   match goal with 

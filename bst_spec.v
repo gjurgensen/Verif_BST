@@ -557,6 +557,28 @@ Proof.
     + assumption.
 Qed.
 
+Theorem path_step_head_down_l : forall k_search k v l r b,
+  node (k,v) l r <> b ->
+  search_path k_search (node (k,v) l r) b -> k_search < k -> search_path k_search l b.
+Proof.
+  intros.
+  inv H0.
+  - contradiction. 
+  - assumption.
+  - lia.
+Qed.
+
+Theorem path_step_head_down_r : forall k_search k v l r b,
+  node (k,v) l r <> b ->
+  search_path k_search (node (k,v) l r) b -> k_search > k -> search_path k_search r b.
+Proof.
+  intros.
+  inv H0.
+  - contradiction. 
+  - lia.
+  - assumption.
+Qed.
+
 Theorem search_path_fail : forall k b, search_path k b leaf -> search k b = leaf.
 Proof.
   intros. dependent induction H.
@@ -680,8 +702,6 @@ Proof.
 Qed.
 
 (* Bst-specific Ltac *)
-
-(* Finds *trivial* subtrees *)
 Ltac bst_subtrees :=
   repeat match goal with 
   | [b: bin_tree _ |- _] => pose_new_proof (is_subtree_refl b)
@@ -689,7 +709,6 @@ Ltac bst_subtrees :=
       pose_new_proof (is_subtree_refl (node a l r)) +
       pose_new_proof (is_subtree_left  l a l r (is_subtree_refl l)) +
       pose_new_proof (is_subtree_right r a l r (is_subtree_refl r))
-  | [H: search_path _ _ _ |- _] => pose_new_proof (search_path_is_subtree _ _ _ H)
   (* This is a limited version of transitivity. Only applies when the intermediate is not a node
      (and therefore doesn't give good ordering info) *)
   | [H1: is_subtree (node _ _ _) ?b,
@@ -706,28 +725,37 @@ Ltac bst_subtrees :=
   end. *)
 
 Ltac bst_ord :=
-  bst_subtrees;
   repeat match goal with 
   | [H0: well_ordered (node _ ?l _),
      H1: is_subtree (node _ _ _) ?l |- _] => pose_new_proof (wo_left _ _ _ _ _ _ _ _ H0 H1)
   | [H0: well_ordered (node _ _ ?r),
      H1: is_subtree (node _ _ _) ?r |- _] => pose_new_proof (wo_right _ _ _ _ _ _ _ _ H0 H1)
-  | [H0: well_ordered (node (?k, ?v) ?l ?r),
-     H1: search_path _ (node (?k, ?v) ?l ?r) (node (?k', _) _ _) |- _] =>
-       let H_ord := fresh in 
-       assert (H_ord: k' < k) by (assumption + lia);  
-       pose_new_proof (path_shrink_l _ _ _ _ _ _ _ _ _ H0 H_ord H1);
-       pose_new_proof (path_extract_ord_l _ _ _ _ _ _ _ _ _ H0 H_ord H1);
-       clear H_ord
-  | [H0: well_ordered (node (?k, ?v) ?l ?r),
-     H1: search_path _ (node (?k, ?v) ?l ?r) (node (?k', _) _ _) |- _] =>
-       let H_ord := fresh in 
-       assert (H_ord: k < k') by (assumption + lia);  
-       pose_new_proof (path_shrink_r _ _ _ _ _ _ _ _ _ H0 H_ord H1);
-       pose_new_proof (path_extract_ord_r _ _ _ _ _ _ _ _ _ H0 H_ord H1);
-       clear H_ord
   | [H0: well_ordered ?b,
      H1: is_subtree ?sub ?b |- _] => pose_new_proof (subtree_well_ordered _ _ H1 H0)
+  end.
+
+Ltac search_path_facts :=
+  repeat match goal with
+  | [H: search_path _ _ _ |- _] => pose_new_proof (search_path_is_subtree _ _ _ H)
+  | [H0: well_ordered (node (?k, ?v) ?l ?r),
+     H1: search_path _ (node (?k, ?v) ?l ?r) (node (?k', _) _ _) |- _] =>
+       let H_ord := fresh in 
+         ((assert (H_ord: k' < k) by (assumption + lia);  
+          pose_new_proof (path_shrink_l _ _ _ _ _ _ _ _ _ H0 H_ord H1) +
+          pose_new_proof (path_extract_ord_l _ _ _ _ _ _ _ _ _ H0 H_ord H1)) +
+          (assert (H_ord: k < k') by (assumption + lia);  
+          pose_new_proof (path_shrink_r _ _ _ _ _ _ _ _ _ H0 H_ord H1) +
+          pose_new_proof (path_extract_ord_r _ _ _ _ _ _ _ _ _ H0 H_ord H1)));
+        clear H_ord
+  | [H0: search_path ?k_search (node (?k, ?v) ?l ?r) ?b |- _] =>
+      let H_neq := fresh in 
+      assert (H_neq: node (k, v) l r <> b) by my_crush;
+      let H_ord := fresh in
+        ((assert (H_ord: k_search < k) by (assumption + lia);
+         pose_new_proof (path_step_head_down_l _ _ _ _ _ _ H_neq H0 H_ord)) +
+         (assert (H_ord: k_search > k) by (assumption + lia);
+         pose_new_proof (path_step_head_down_r _ _ _ _ _ _ H_neq H0 H_ord)));
+      clear H_neq H_ord
   end.
 
 Ltac bst_inv_node_eq :=
@@ -736,10 +764,19 @@ Ltac bst_inv_node_eq :=
      H1: is_subtree (node (?z,_) _ _) (node (?z,_) _ _) |- _] => 
       let H_eq := fresh in 
       pose_new_proof_as (wo_node_eq _ _ _ _ _ _ _ H0 H1) H_eq;
-      invc H_eq
-  end.
+      inv H_eq
+  end;
+  clear_redundants.
 
-Ltac bst_facts := repeat (assumption + lia + bst_subtrees + bst_ord + bst_inv_node_eq); elim_redudants.
+Ltac bst_facts :=
+  repeat (
+    assumption +
+    lia +
+    search_path_facts +
+    bst_subtrees +
+    bst_ord +
+    bst_inv_node_eq);
+  clear_redundants.
 
 Ltac rewrite_Zcompare_bst_facts := 
   (rewrite Zaux.Zcompare_Lt by bst_facts) +
